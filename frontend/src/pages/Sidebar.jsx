@@ -10,7 +10,6 @@ function Sidebar() {
         <li>Students</li>
         <li>Transactions</li>   
         <li>Reports</li>
-
       </ul>
     </div>
   )
