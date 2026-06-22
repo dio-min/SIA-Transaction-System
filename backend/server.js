@@ -3,7 +3,7 @@ const dotenv = require('dotenv');
 const connectDB = require('./src/database/database');
 const cors = require('cors');
 const destinationRoutes = require('./src/routers/destinationRoutes');
-
+const userRoutes = require('./src/routers/userRoutes');
 dotenv.config();
 const PORT = process.env.PORT || 5000;
 
@@ -12,7 +12,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/api/destinations', destinationRoutes);
-
+app.use('/api/users', userRoutes);
 // Error handler
 app.use((err, req, res, next) => {
   console.error('Server error:', err);

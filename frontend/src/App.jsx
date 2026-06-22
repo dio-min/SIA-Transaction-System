@@ -2,6 +2,7 @@ import React from 'react'
 import Sample from './pages/Sample'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
 import Sidebar from './pages/Sidebar'
+import Landing from './pages/Landing'
 import './App.css'
 function App() {
   return (
@@ -9,7 +10,8 @@ function App() {
       <div>
         <Sidebar />
         <Routes>
-          <Route path="/" element={<Sample />} />
+          <Route path="/" element={<Landing />} />
+
         </Routes>
       </div>
     </Router>

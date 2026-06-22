@@ -16,3 +16,5 @@ const createDestination = asyncHandler(async (req, res) => {
     const savedDestination = await newDestination.save();
     res.status(201).json(savedDestination);
 });
+
+module.exports = { createDestination };
