@@ -16,12 +16,20 @@ const destinations = [
   
 ];
 
+const users = [
+  {
+    username: 'testuser',
+    email: 'sample@email.com',
+    password: 'password123',
+    role: 'traveler'
+  }
+];
+
 async function sample() {
   try {
-    connectDB();
+    await connectDB();
     console.log('Connected to MongoDB');
 
-  
     await Destination.deleteMany({});
     console.log('Cleared existing data');
 
@@ -31,14 +39,13 @@ async function sample() {
 
 
 
-    const user = new User({
-      username: 'testuser',
-      email: 'sample@email.com',
-      password: 'password123',
-    });
-    await user.save();
-    console.log('Seeded 1 user');
     
+    await User.deleteMany({});
+    console.log('Cleared existing users');
+
+    // Insert users
+    await User.insertMany(users);
+    console.log(`Seeded ${users.length} users`);
 
     console.log('Seeding complete!');
     process.exit(0);
