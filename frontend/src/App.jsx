@@ -1,6 +1,7 @@
 import React from 'react'
 
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
+import Login from './pages/Login'
 
 import { Input, Space } from 'antd';
 
@@ -13,6 +14,7 @@ function App() {
 
         <Routes>
           <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
 
         </Routes>
       </div>

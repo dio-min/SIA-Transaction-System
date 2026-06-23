@@ -1,7 +1,7 @@
 import React from "react";
 import { Layout, Card, Input, Image, Button } from "antd";
 import { motion, useInView, useScroll } from "framer-motion";
-
+import Signup from "./Signup";
 const { Header, Footer, Content } = Layout;
 const { Meta } = Card;
 const { Search } = Input;
@@ -9,7 +9,7 @@ const { Search } = Input;
 function Landing() {
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Header style={{ backgroundColor: "#005707" }}>
+      <Header style={{ backgroundColor: "#005707" }} className="sticky top-0 z-50">
         <Navbar />
       </Header>
 
@@ -96,23 +96,7 @@ function HeroSection() {
             transition={{ delay: 0.8, duration: 0.5 }}
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
-            <Button
-              size="lg"
-              className="rounded-full px-8 py-6 text-lg font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105 w-full sm:w-auto"
-              style={{
-                background: "#005707",
-                color: "#fff",
-                fontFamily: "'Nunito', sans-serif",
-                border: "none",
-              }}
-              onClick={() =>
-                document
-                  .getElementById("menu")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
-            >
-              Get Started
-            </Button>
+            <Signup />
            
           </motion.div>
         </motion.div>
@@ -126,7 +110,8 @@ function HeroSection() {
 
 function Navbar() {
   return (
-    <div className="flex justify-between items-center h-full mx-10">
+    
+    <div className="flex justify-between items-center h-full mx-10 ">
       <h1 className="text-xl font-bold" style={{ color: "#ffffff" }}>
         Bisita NV
       </h1>
@@ -141,13 +126,12 @@ function Navbar() {
           <a href="/login" className="hover:text-blue-600">
             Login
           </a>
-          <a href="/signup" className="hover:text-blue-600">
-            Signup
-          </a>
+          
         </nav>
       </div>
     </div>
   );
 }
+        
 
 export default Landing;
