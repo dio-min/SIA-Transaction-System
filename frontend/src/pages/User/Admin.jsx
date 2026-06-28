@@ -4,21 +4,20 @@ import {
   Menu,
   Input,
   Button,
-  Cascader,
-  DatePicker,
   Form,
-  InputNumber,
-  Mentions,
-  Segmented,
-  Select,
-  TreeSelect,
-  Upload,
   message,
+  Modal,
+  Table,
+  Space,
+  ConfigProvider,
 } from "antd";
 import { LoadingOutlined, PlusOutlined } from "@ant-design/icons";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+
 const { Header, Content, Footer, Sider } = Layout;
 import axios from "axios";
+
 const { Search, TextArea } = Input;
 const getBase64 = (img, callback) => {
   const reader = new FileReader();
@@ -26,221 +25,566 @@ const getBase64 = (img, callback) => {
   reader.readAsDataURL(img);
 };
 
-const { RangePicker } = DatePicker;
-const formItemLayout = {
-  labelCol: {
-    xs: { span: 24 },
-    sm: { span: 6 },
-  },
-  wrapperCol: {
-    xs: { span: 24 },
-    sm: { span: 14 },
-  },
-};
-
 function Admin() {
+  const [selectedMenu, setSelectedMenu] = useState("1");
+
+  const renderContent = () => {
+    if (selectedMenu === "2") {
+      return (
+        <>
+          <div>
+            <ViewDestination />
+          </div>
+        </>
+      );
+    }
+
+    if (selectedMenu === "3") {
+      return (
+        <div className="rounded-xl bg-white p-8 shadow-sm">
+          <h2 className="text-2xl font-semibold" style={{ color: "#003705" }}>
+            Agencies
+          </h2>
+          <p className="mt-2 text-gray-600">
+            Agencies content will appear here.
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="rounded-xl bg-white p-8 shadow-sm">
+        <h2 className="text-2xl font-semibold" style={{ color: "#003705" }}>
+          Dashboard
+        </h2>
+        <p className="mt-2 text-gray-600">Welcome to the admin dashboard.</p>
+      </div>
+    );
+  };
+
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <Sider width="15%" style={{ backgroundColor: "#000000" }}>
-        <Navbar />
+      <Sider
+        width={250}
+        style={{
+          backgroundColor: "#005707",
+          position: "fixed",
+          left: 0,
+          top: 0,
+          height: "100vh",
+          overflow: "auto",
+        }}
+      >
+        <Navbar selectedKey={selectedMenu} onSelect={setSelectedMenu} />
       </Sider>
-      <Layout>
-        <Header>Header</Header>
-        <Content>
-          <AddDestination />
+
+      <Layout style={{ marginLeft: 250 }}>
+        <Content
+          style={{
+            padding: "32px",
+            background: "#f5f5f5",
+            minHeight: "100vh",
+          }}
+        >
+          <div
+            style={{
+              maxWidth: "1400px",
+              margin: "0 auto",
+              width: "100%",
+            }}
+          >
+            {renderContent()}
+          </div>
         </Content>
-        <Footer>Footer</Footer>
       </Layout>
     </Layout>
   );
 }
 
-function Navbar() {
+function Navbar({ selectedKey, onSelect }) {
+  const navigate = useNavigate();
+
+  const handleSignOut = () => {
+    localStorage.removeItem("rememberedLogin");
+    message.success("Signed out successfully.");
+    navigate("/");
+  };
+
+  const items = [
+    {
+      key: "1",
+      label: "Dashboard",
+    },
+    {
+      key: "2",
+      label: "Destinations",
+    },
+    {
+      key: "3",
+      label: "Agencies",
+    },
+  ];
+
   return (
-    <div className="flex flex-col justify-between items-center h-full mx-10 ">
-      <h1 className="text-xl font-bold" style={{ color: "#000000" }}>
-        Bisita NV
-      </h1>
-      <Menu
-        style={{
-          width: "100%",
-          margin: "auto",
-          backgroundColor: "#6d6d6d",
-          color: "#ffffff",
-        }}
-        defaultSelectedKeys={["1"]}
-        defaultOpenKeys={["sub1"]}
-        items={[
-          {
-            key: "1",
-            label: "Dashboard",
-          },
-          {
-            key: "2",
-            label: "Destinations",
-          },
-        ]}
-      />
+    <div className="h-screen flex flex-col">
+      {/* Logo */}
+      <div className="p-6">
+        <h1 className="text-2xl font-bold text-white text-center">Bisita NV</h1>
+      </div>
+
+      {/* Menu */}
+      <div className="flex-1">
+        <Menu
+          mode="inline"
+          theme="dark"
+          selectedKeys={[selectedKey]}
+          onClick={({ key }) => onSelect(key)}
+          items={items}
+          style={{
+            borderRight: 0,
+            background: "transparent",
+          }}
+        />
+      </div>
+
+      {/* Sign Out */}
+      <div className="p-4 mt-auto">
+        <Button danger block onClick={handleSignOut}>
+          Sign Out
+        </Button>
+      </div>
     </div>
   );
 }
-
 function AddDestination() {
-  const [destination, setDestination] = useState([""]);
-  const [location, setLocation] = useState([""]);
-  const [description, setDescription] = useState([""]);
-
   const [messageApi, contextHolder] = message.useMessage();
-  const [loading, setLoading] = useState(false);
-  const [imageUrl, setImageUrl] = useState();
+  const [destination, setDestination] = useState("");
+  const [location, setLocation] = useState("");
+  const [description, setDescription] = useState("");
+  const [image, setImage] = useState(null);
+  const [preview, setPreview] = useState(null);
 
-  const beforeUpload = (file) => {
-    const isJpgOrPng = file.type === "image/jpeg" || file.type === "image/png";
-    if (!isJpgOrPng) {
-      messageApi.error("You can only upload JPG/PNG file!");
-    }
-    const isLt2M = file.size / 1024 / 1024 < 2;
-    if (!isLt2M) {
-      messageApi.error("Image must smaller than 2MB!");
-    }
-    return isJpgOrPng && isLt2M;
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const showModal = () => {
+    setIsModalOpen(true);
   };
-  const handleChange = (info) => {
-   
-    if (info.file.status === "uploading") {
-      setLoading(true);
-      return;
-    }
-    if (info.file.status === "done") {
-      // Get this url from response in real world.
-      getBase64(info.file.originFileObj, (url) => {
-        setLoading(false);
-        setImageUrl(url);
-      });
+  const handleOk = () => {
+    setIsModalOpen(false);
+  };
+  const handleCancel = () => {
+    setIsModalOpen(false);
+  };
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImage(file);
+      setPreview(URL.createObjectURL(file));
     }
   };
-  const uploadButton = (
-    <button style={{ border: 0, background: "none" }} type="button">
-      {loading ? <LoadingOutlined /> : <PlusOutlined />}
-      <div style={{ marginTop: 8 }}>Upload</div>
-    </button>
-  );
 
   const handleSubmit = async (e) => {
-     e.preventDefault();
+    if (!image) {
+      console.error("No image selected");
+      messageApi.error("Please select an image before saving.");
+      return;
+    }
 
-     const formData = new FormData();
+    setLoading(true);
+    messageApi.open({
+      key: "upload",
+      type: "loading",
+      content: "Uploading image...",
+      duration: 0,
+    });
 
-     formData.append("destination", destination);
-     formData.append("location", location);
-     formData.append("description", description);
-     
+    try {
+      const formData = new FormData();
 
-     const data = await axios.post("http://localhost:5000/api/destinations/createDestination", formData,{
-        headers:  { "Content-Type": "multipart/form-data" },
-     })
-     alert("added successfully")
-    
-  }
+      formData.append("destination", destination);
+      formData.append("location", location);
+      formData.append("description", description);
+      formData.append("image", image, image.name);
+
+      await axios.post(
+        "http://localhost:5000/api/destinations/createDestination",
+        formData,
+      );
+      setDestination("");
+      setDescription("");
+      setLocation("");
+      setImage(null);
+
+      messageApi.success({
+        key: "upload",
+        content: "Added successfully.",
+      });
+
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Upload error:", error.response?.data ?? error.message);
+      messageApi.error({
+        key: "upload",
+        content: "Upload failed. Please try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <><div style={{ width: "500px" }} className="m-auto mt-10">
-      <Form name="Add destination" layout="vertical" autoComplete="off">
-        <h1 className="font-extrabold text-center">Add Destination</h1>
-        <Form.Item
-          label="Destination Name"
-          name="name"
-          rules={[{ required: true }]}
-        >
-          <Input
-            size="large"
-            value={destination}
-            onChange={(e) => setDestination(e.target.value)}
-          />
-        </Form.Item>
-        <Form.Item
-          label="Location"
-          name="location"
-          rules={[{ required: true }]}
-        >
-          <Input
-            size="large"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-          />
-        </Form.Item>
-        <Form.Item
-          label="Description"
-          name="description"
-          rules={[{ required: true }]}
-        >
-          <TextArea
-            rows={4}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </Form.Item>
-
-        <Form.Item name="name" rules={[{ required: true }]}>
-           <Upload
-        name="avatar"
-        listType="picture-card"
-        style={{ width: "100%" }}
-        action="https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload"
-        showUploadList={false}
-        beforeUpload={beforeUpload}
-        onChange={handleChange}
+    <>
+      {contextHolder}
+      <Button
+        type="primary"
+        onClick={showModal}
+        style={{ backgroundColor: "#005707" }}
       >
-        {imageUrl ? (
-          <img draggable={false} src={imageUrl} alt="avatar" />
-        ) : (
-          uploadButton
-        )}
-      </Upload>
-        </Form.Item>
+        <PlusOutlined />
+        Add Destination
+      </Button>
+      <Modal
+        title="Add New Destination"
+        open={isModalOpen}
+        onCancel={handleCancel}
+        footer={null}
+        destroyOnClose
+        width={850}
+      >
+        <Form
+          name="add-destination"
+          layout="vertical"
+          autoComplete="off"
+          onFinish={handleSubmit}
+        >
+          <p className="text-gray-500 mb-6">
+            Fill in the details for your new destination.
+          </p>
 
-        <Form.Item>
-          <div className="flex gap-5">
-            <Button
-              type="secondary"
-              htmlType="cancel"
-              size="large"
-              className="w-full mt-10"
-              style={{
-                border: "none",
-                fontFamily: "'Nunito', sans-serif",
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="primary"
-              htmlType="submit"
-              size="large"
-              className="w-full mt-10"
-              style={{
-                background: "#005707    ",
-                border: "none",
-                fontFamily: "'Nunito', sans-serif",
-              }}
-              onClick={handleSubmit}
-            >
-              Save
-            </Button>
+          <div className="grid grid-cols-2 gap-8">
+            {/* LEFT SIDE */}
+            <div>
+              <Form.Item
+                label="Destination Name"
+                name="name"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please enter the destination name.",
+                  },
+                ]}
+              >
+                <Input
+                  size="large"
+                  value={destination}
+                  onChange={(e) => setDestination(e.target.value)}
+                  placeholder="e.g. Mount Pulag"
+                />
+              </Form.Item>
+
+              <Form.Item
+                label="Location"
+                name="location"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please enter the location.",
+                  },
+                ]}
+              >
+                <Input
+                  size="large"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="e.g. Benguet"
+                />
+              </Form.Item>
+
+              <Form.Item
+                label="Description"
+                name="description"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please enter a description.",
+                  },
+                ]}
+              >
+                <TextArea
+                  rows={7}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Write a short description..."
+                />
+              </Form.Item>
+            </div>
+
+            {/* RIGHT SIDE */}
+            <div>
+              <Form.Item
+                label="Destination Image"
+                name="image"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please upload an image.",
+                  },
+                ]}
+              >
+                <div>
+                  <label
+                    htmlFor="image-upload"
+                    className="flex flex-col items-center justify-center
+                         w-full h-80
+                         border-2 border-dashed border-gray-300
+                         rounded-xl
+                         cursor-pointer
+                         transition-all
+                         hover:border-green-600
+                         hover:bg-green-50"
+                  >
+                    {preview ? (
+                      <img
+                        src={preview}
+                        alt="Preview"
+                        className="w-full h-full object-cover rounded-xl"
+                      />
+                    ) : (
+                      <div className="text-center text-gray-500">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="w-14 h-14 mx-auto mb-3"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M3 15a4 4 0 014-4h.26A8 8 0 1117 18H7a4 4 0 01-4-3zm9-7v8m0 0l-3-3m3 3l3-3"
+                          />
+                        </svg>
+
+                        <p className="font-semibold text-base">
+                          Click to upload
+                        </p>
+
+                        <p className="text-sm text-gray-400 mt-1">
+                          PNG, JPG or JPEG
+                        </p>
+
+                        <p className="text-xs text-gray-400">
+                          Maximum file size: 5 MB
+                        </p>
+                      </div>
+                    )}
+                  </label>
+
+                  <input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                </div>
+              </Form.Item>
+            </div>
           </div>
-        </Form.Item>
-      </Form>
-    </div></>
-    
+
+          <Form.Item className="mb-0 mt-8">
+            <div className="flex justify-end gap-4">
+              <Button size="large" onClick={handleCancel}>
+                Cancel
+              </Button>
+
+              <Button
+                type="primary"
+                htmlType="submit"
+                size="large"
+                loading={loading}
+                style={{
+                  background: "#005707",
+                  border: "none",
+                }}
+              >
+                {loading ? "Uploading..." : "Save Destination"}
+              </Button>
+            </div>
+          </Form.Item>
+        </Form>
+      </Modal>
+    </>
   );
 }
 
-function UploadImg() {
-  
+function ViewDestination() {
+  const [items, setItems] = useState([]);
+  const [searchText, setSearchText] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const showModal = () => {
+    setIsModalOpen(true);
+  };
+  const handleOk = () => {
+    setIsModalOpen(false);
+  };
+  const handleCancel = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/destinations/${id}`);
+
+      setItems((prev) => prev.filter((item) => item._id !== id));
+    } catch (error) {
+      console.error("Error deleting destination:", error);
+    }
+  };
+
+  const columns = [
+    {
+      title: "Image",
+      dataIndex: "destinationImage",
+      key: "destinationImage",
+      render: (url) =>
+        url ? (
+          <img
+            src={url}
+            alt="Destination"
+            style={{
+              width: 120,
+              height: 80,
+              objectFit: "cover",
+              borderRadius: 6,
+            }}
+          />
+        ) : (
+          "-"
+        ),
+    },
+    {
+      title: "Destination",
+      dataIndex: "destination",
+      key: "destination",
+    },
+    {
+      title: "Location",
+      dataIndex: "location",
+      key: "location",
+    },
+    {
+      title: "Rating",
+      dataIndex: "rating",
+      key: "rating",
+      render: (value) => value ?? "-",
+    },
+    {
+      title: "Action",
+      key: "action",
+      render: (_, record) => (
+        <>
+          <Space wrap size="middle">
+            <Button type="primary" onClick={() => handleUpdate(record._id)}>
+              Update
+            </Button>
+
+            <Button
+              danger
+              type="primary"
+              // onClick={() => handleDelete(record._id)}
+              onClick={showModal}
+            >
+              Delete
+            </Button>
+            <Modal
+              title="Delete Destination"
+              open={isModalOpen}
+              onCancel={handleCancel}
+              footer={null}
+              destroyOnClose
+              
+            >
+              <p>Are you sure you want to delete {record.destination}</p>
+              <Button danger
+              onClick={() => handleDelete(record._id)}
+              >Delete</Button>
+              <Button onClick={handleCancel}>Cancel</Button>
+            </Modal>
+          </Space>
+        </>
+      ),
+    },
+  ];
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await axios.get(
+          "http://localhost:5000/api/destinations/getDestination",
+        );
+
+        setItems(
+          res.data.map((item) => ({
+            ...item,
+            key: item._id,
+          })),
+        );
+      } catch (error) {
+        console.error("Error fetching destinations:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const filteredItems = items.filter((item) => {
+    const query = searchText.toLowerCase();
+    return [item.destination, item.location, item.description].some((value) =>
+      String(value || "")
+        .toLowerCase()
+        .includes(query),
+    );
+  });
+
   return (
-    <>
-     
-    </>
+    <ConfigProvider
+      theme={{
+        components: {
+          Table: {
+            headerBg: "#005707",
+            headerColor: "#fff",
+            rowHoverBg: "#ffffff",
+            headerSplitColor: "#ffffff",
+            borderColor: "#005707",
+          },
+        },
+      }}
+    >
+      <div className="flex justify-between mb-3 rounded-xl bg-white p-3 shadow-sm">
+        <h2 className="text-2xl font-semibold" style={{ color: "#003705" }}>
+          Add Destination
+        </h2>
+        <div className="flex gap-3">
+          <Search
+            placeholder="Search destinations"
+            allowClear
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ marginBottom: 10, maxWidth: 320 }}
+          />
+          <AddDestination />
+        </div>
+      </div>
+
+      <Table
+        columns={columns}
+        dataSource={filteredItems}
+        pagination={{ pageSize: 4 }}
+      />
+    </ConfigProvider>
   );
 }
 

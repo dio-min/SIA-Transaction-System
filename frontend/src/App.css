@@ -7,3 +7,9 @@ a{
 *{
     font-family: 'Poppins', sans-serif;
 }
+
+.ant-menu-dark .ant-menu-item-selected {
+  background-color: #ffffff !important;
+  color: #005707 !important;
+}
+

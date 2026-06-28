@@ -1,11 +1,14 @@
-const express = require('express');
 const dotenv = require('dotenv');
+dotenv.config(); // must run before anything that depends on process.env
+
+const express = require('express');
 const connectDB = require('./src/database/database');
 const cors = require('cors');
 const destinationRoutes = require('./src/routers/destinationRoutes');
 const userRoutes = require('./src/routers/userRoutes');
 const packageRoutes = require('./src/routers/packageRoutes');
-dotenv.config();
+
+
 const PORT = process.env.PORT || 5000;
 
 const app = express();
@@ -31,4 +34,4 @@ const startServer = async () => {
   });
 };
 
-startServer(); 
+startServer();
