@@ -1,8 +1,8 @@
 const express= require('express');
 const router = express.Router();
 const upload = require('../middleware/upload');
-const { createDestination, deleteDestination } = require('../controllers/destinationController');
-const {getDestination}= require('../controllers/destinationController')
+const { createDestination, deleteDestination, updateDestination, getDestination } = require('../controllers/destinationController');
+
 
 const handleUploadError = (err, req, res, next) => {
   if (err) {
@@ -17,6 +17,7 @@ const handleUploadError = (err, req, res, next) => {
 router.post('/createDestination', upload.single('image'), handleUploadError, createDestination);
 router.get('/getDestination', getDestination);
 router.delete("/:id", deleteDestination);
+router.put("/updateDestination", upload.single('image'), handleUploadError, updateDestination);
 
 
 

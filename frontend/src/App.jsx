@@ -7,6 +7,7 @@ import { Input, Space } from 'antd';
 
 import Landing from './pages/Landing'
 import Admin from './pages/User/Admin'
+
 import './App.css'
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/admin" element={<Admin />} />
+          
         </Routes>
       </div>
     </Router>

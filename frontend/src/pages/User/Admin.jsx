@@ -43,11 +43,9 @@ function Admin() {
       return (
         <div className="rounded-xl bg-white p-8 shadow-sm">
           <h2 className="text-2xl font-semibold" style={{ color: "#003705" }}>
-            Agencies
+            Packages
           </h2>
-          <p className="mt-2 text-gray-600">
-            Agencies content will appear here.
-          </p>
+          <ViewPackages />
         </div>
       );
     }
@@ -121,7 +119,7 @@ function Navbar({ selectedKey, onSelect }) {
     },
     {
       key: "3",
-      label: "Agencies",
+      label: "Packages",
     },
   ];
 
@@ -156,7 +154,9 @@ function Navbar({ selectedKey, onSelect }) {
     </div>
   );
 }
-function AddDestination() {
+
+function AddDestination({ editDestination, onUpdateComplete, onClose }) {
+  const [editID, setEditID] = useState("");
   const [messageApi, contextHolder] = message.useMessage();
   const [destination, setDestination] = useState("");
   const [location, setLocation] = useState("");
@@ -167,15 +167,38 @@ function AddDestination() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (editDestination) {
+      setDestination(editDestination.destination || "");
+      setLocation(editDestination.location || "");
+      setDescription(editDestination.description || "");
+      setEditID(editDestination._id || "");
+      setPreview(editDestination.destinationImage || null);
+      setImage(editDestination.destinationImage || null);
+      setIsModalOpen(true);
+    }
+  }, [editDestination]);
+
+  const clearForm = () => {
+    setEditID("");
+    setDestination("");
+    setLocation("");
+    setDescription("");
+    setImage(null);
+    setPreview(null);
+  };
+
   const showModal = () => {
+    clearForm();
     setIsModalOpen(true);
   };
-  const handleOk = () => {
-    setIsModalOpen(false);
-  };
+
   const handleCancel = () => {
     setIsModalOpen(false);
+    clearForm();
+    if (onClose) onClose();
   };
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -184,8 +207,10 @@ function AddDestination() {
     }
   };
 
-  const handleSubmit = async (e) => {
-    if (!image) {
+  const isEditing = Boolean(editID);
+
+  const handleSubmit = async () => {
+    if (!isEditing && !image) {
       console.error("No image selected");
       messageApi.error("Please select an image before saving.");
       return;
@@ -201,27 +226,37 @@ function AddDestination() {
 
     try {
       const formData = new FormData();
-
       formData.append("destination", destination);
       formData.append("location", location);
       formData.append("description", description);
-      formData.append("image", image, image.name);
 
-      await axios.post(
-        "http://localhost:5000/api/destinations/createDestination",
-        formData,
-      );
-      setDestination("");
-      setDescription("");
-      setLocation("");
-      setImage(null);
+      if (image instanceof File) {
+        formData.append("image", image, image.name);
+      }
 
-      messageApi.success({
-        key: "upload",
-        content: "Added successfully.",
-      });
+      if (isEditing) {
+        formData.append("id", editID);
+        await axios.put("http://localhost:5000/api/destinations/updateDestination", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        messageApi.success({
+          key: "upload",
+          content: "Updated successfully.",
+        });
+      } else {
+        await axios.post(
+          "http://localhost:5000/api/destinations/createDestination",
+          formData,
+        );
+        messageApi.success({
+          key: "upload",
+          content: "Added successfully.",
+        });
+      }
 
+      clearForm();
       setIsModalOpen(false);
+      if (onUpdateComplete) onUpdateComplete();
     } catch (error) {
       console.error("Upload error:", error.response?.data ?? error.message);
       messageApi.error({
@@ -327,7 +362,7 @@ function AddDestination() {
                 name="image"
                 rules={[
                   {
-                    required: true,
+                    required: !isEditing,
                     message: "Please upload an image.",
                   },
                 ]}
@@ -410,7 +445,7 @@ function AddDestination() {
                   border: "none",
                 }}
               >
-                {loading ? "Uploading..." : "Save Destination"}
+                {loading ? "Uploading..." : isEditing ? "Update Destination" : "Save Destination"}
               </Button>
             </div>
           </Form.Item>
@@ -434,14 +469,51 @@ function ViewDestination() {
     setIsModalOpen(false);
   };
 
+  const [editDestination, setEditDestination] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const fetchData = async () => {
+    try {
+      const res = await axios.get(
+        "http://localhost:5000/api/destinations/getDestination",
+      );
+
+      setItems(
+        res.data.map((item) => ({
+          ...item,
+          key: item._id,
+        })),
+      );
+    } catch (error) {
+      console.error("Error fetching destinations:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [refreshKey]);
+
   const handleDelete = async (id) => {
     try {
       await axios.delete(`http://localhost:5000/api/destinations/${id}`);
-
-      setItems((prev) => prev.filter((item) => item._id !== id));
+      setRefreshKey((prev) => prev + 1);
+      setIsModalOpen(false);
     } catch (error) {
       console.error("Error deleting destination:", error);
     }
+  };
+
+  const handleUpdate = (destination) => {
+    setEditDestination(destination);
+  };
+
+  const handleUpdateComplete = () => {
+    setEditDestination(null);
+    setRefreshKey((prev) => prev + 1);
+  };
+
+  const handleEditModalClose = () => {
+    setEditDestination(null);
   };
 
   const columns = [
@@ -487,7 +559,7 @@ function ViewDestination() {
       render: (_, record) => (
         <>
           <Space wrap size="middle">
-            <Button type="primary" onClick={() => handleUpdate(record._id)}>
+            <Button type="primary" onClick={() => handleUpdate(record)}>
               Update
             </Button>
 
@@ -505,12 +577,11 @@ function ViewDestination() {
               onCancel={handleCancel}
               footer={null}
               destroyOnClose
-              
             >
               <p>Are you sure you want to delete {record.destination}</p>
-              <Button danger
-              onClick={() => handleDelete(record._id)}
-              >Delete</Button>
+              <Button danger onClick={() => handleDelete(record._id)}>
+                Delete
+              </Button>
               <Button onClick={handleCancel}>Cancel</Button>
             </Modal>
           </Space>
@@ -519,26 +590,6 @@ function ViewDestination() {
     },
   ];
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await axios.get(
-          "http://localhost:5000/api/destinations/getDestination",
-        );
-
-        setItems(
-          res.data.map((item) => ({
-            ...item,
-            key: item._id,
-          })),
-        );
-      } catch (error) {
-        console.error("Error fetching destinations:", error);
-      }
-    };
-
-    fetchData();
-  }, []);
 
   const filteredItems = items.filter((item) => {
     const query = searchText.toLowerCase();
@@ -575,7 +626,11 @@ function ViewDestination() {
             onChange={(e) => setSearchText(e.target.value)}
             style={{ marginBottom: 10, maxWidth: 320 }}
           />
-          <AddDestination />
+          <AddDestination
+            editDestination={editDestination}
+            onUpdateComplete={handleUpdateComplete}
+            onClose={handleEditModalClose}
+          />
         </div>
       </div>
 
@@ -585,6 +640,66 @@ function ViewDestination() {
         pagination={{ pageSize: 4 }}
       />
     </ConfigProvider>
+  );
+}
+
+function ViewPackages() {
+  const columns = [
+    {
+      title:"Destination",
+      dataIndex: "destination",
+      key:"destination"
+    },
+    {
+      title: "Package",
+      dataIndex: "packageName",
+      key: "destinationImage",
+      
+    },
+    {
+      title: "Type",
+      dataIndex: "type",
+      key: "type",
+    },
+    {
+      title: "Price",
+      dataIndex: "price",
+      key: "price",
+    },
+    {
+      title: "Max capacity",
+      dataIndex: "max_capacity",
+      key: "max_capacity",
+    },
+    {
+      title: "Action",
+      dataIndex: "action",
+      key: "action",
+    },
+  ];
+
+  return (
+    <>
+      <ConfigProvider
+        theme={{
+          components: {
+            Table: {
+              headerBg: "#005707",
+              headerColor: "#fff",
+              rowHoverBg: "#ffffff",
+              headerSplitColor: "#ffffff",
+              borderColor: "#005707",
+            },
+          },
+        }}
+      >
+        <Table
+          columns={columns}
+         
+          pagination={{ pageSize: 4 }}
+        />
+      </ConfigProvider>
+    </>
   );
 }
 

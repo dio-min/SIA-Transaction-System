@@ -19,7 +19,8 @@ const destinationSchema = new mongoose.Schema({
     rating:{
         type:Number,
         default: 0
-    }
+    },
+   
 });
 const Destination = mongoose.model('Destination', destinationSchema);
 
