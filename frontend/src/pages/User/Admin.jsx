@@ -679,236 +679,236 @@ function ViewDestination() {
   );
 }
 
-function AddPackages({ editDestination, onUpdateComplete, onClose }) {
-  const [package, setPackage]= useState("");
-  const [type, setType]=useState("");
-  const [description, setDescription]=useState("");
-  const [duration, setDuration]= useState("");
-  const [difficulty, setDifficulty]= useState("");;
-  const [messageApi, contextHolder] = message.useMessage();
-  const [price, setPrice]= useState();
-  const [maxCapacity, setMaxCapcity]= useState("");
-  const [destination, setDestination]= useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+// function AddPackages({ editDestination, onUpdateComplete, onClose }) {
+//   const [package, setPackage]= useState("");
+//   const [type, setType]=useState("");
+//   const [description, setDescription]=useState("");
+//   const [duration, setDuration]= useState("");
+//   const [difficulty, setDifficulty]= useState("");;
+//   const [messageApi, contextHolder] = message.useMessage();
+//   const [price, setPrice]= useState();
+//   const [maxCapacity, setMaxCapcity]= useState("");
+//   const [destination, setDestination]= useState("");
+//   const [isModalOpen, setIsModalOpen] = useState(false);
+//   const [loading, setLoading] = useState(false);
 
-  return (
-    <>
-      {contextHolder}
-      <Button
-        type="primary"
-        onClick={showModal}
-        style={{ backgroundColor: "#005707" }}
-      >
-        <PlusOutlined />
-        Add Packages
-      </Button>
-      <Modal
-        title="Add New Destination"
-        open={isModalOpen}
-        onCancel={handleCancel}
-        footer={null}
-        destroyOnClose
-        width={850}
-      >
-        <Form
-          name="add-destination"
-          layout="vertical"
-          autoComplete="off"
-          onFinish={handleSubmit}
-        >
-          <p className="text-gray-500 mb-6">
-            Fill in the details for your new destination.
-          </p>
+//   return (
+//     <>
+//       {contextHolder}
+//       <Button
+//         type="primary"
+//         onClick={showModal}
+//         style={{ backgroundColor: "#005707" }}
+//       >
+//         <PlusOutlined />
+//         Add Packages
+//       </Button>
+//       <Modal
+//         title="Add New Destination"
+//         open={isModalOpen}
+//         onCancel={handleCancel}
+//         footer={null}
+//         destroyOnClose
+//         width={850}
+//       >
+//         <Form
+//           name="add-destination"
+//           layout="vertical"
+//           autoComplete="off"
+//           onFinish={handleSubmit}
+//         >
+//           <p className="text-gray-500 mb-6">
+//             Fill in the details for your new destination.
+//           </p>
 
-          <div className="grid grid-cols-2 gap-8">
-            {/* LEFT SIDE */}
-            <div>
-              {editID ? (
-                <Form.Item
-                  label="Destination Name"
-                  name="name"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please enter the destination name.",
-                    },
-                  ]}
-                >
-                  <Input
-                    size="large"
-                    value={destination}
-                    onChange={(e) => setDestination(e.target.value)}
-                    placeholder="e.g. Mount Pulag"
-                    disabled
-                  />
-                </Form.Item>
-              ) : (
-                <Input
-                  size="large"
-                  value={destination}
-                  onChange={(e) => setDestination(e.target.value)}
-                  placeholder="e.g. Mount Pulag"
-                />
-              )}
-              {editID ? (<Form.Item
-                label="Location"
-                name="location"
-                rules={[
-                  {
-                    required: true,
-                    message: "Please enter the location.",
-                  },
-                ]}
-              >
-                <Input
-                  size="large"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="e.g. Benguet"
-                  disabled
-                />
-              </Form.Item>):(<Form.Item
-                label="Location"
-                name="location"
-                rules={[
-                  {
-                    required: true,
-                    message: "Please enter the location.",
-                  },
-                ]}
-              >
-                <Input
-                  size="large"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="e.g. Benguet"
-                />
-              </Form.Item>)}
+//           <div className="grid grid-cols-2 gap-8">
+//             {/* LEFT SIDE */}
+//             <div>
+//               {editID ? (
+//                 <Form.Item
+//                   label="Destination Name"
+//                   name="name"
+//                   rules={[
+//                     {
+//                       required: true,
+//                       message: "Please enter the destination name.",
+//                     },
+//                   ]}
+//                 >
+//                   <Input
+//                     size="large"
+//                     value={destination}
+//                     onChange={(e) => setDestination(e.target.value)}
+//                     placeholder="e.g. Mount Pulag"
+//                     disabled
+//                   />
+//                 </Form.Item>
+//               ) : (
+//                 <Input
+//                   size="large"
+//                   value={destination}
+//                   onChange={(e) => setDestination(e.target.value)}
+//                   placeholder="e.g. Mount Pulag"
+//                 />
+//               )}
+//               {editID ? (<Form.Item
+//                 label="Location"
+//                 name="location"
+//                 rules={[
+//                   {
+//                     required: true,
+//                     message: "Please enter the location.",
+//                   },
+//                 ]}
+//               >
+//                 <Input
+//                   size="large"
+//                   value={location}
+//                   onChange={(e) => setLocation(e.target.value)}
+//                   placeholder="e.g. Benguet"
+//                   disabled
+//                 />
+//               </Form.Item>):(<Form.Item
+//                 label="Location"
+//                 name="location"
+//                 rules={[
+//                   {
+//                     required: true,
+//                     message: "Please enter the location.",
+//                   },
+//                 ]}
+//               >
+//                 <Input
+//                   size="large"
+//                   value={location}
+//                   onChange={(e) => setLocation(e.target.value)}
+//                   placeholder="e.g. Benguet"
+//                 />
+//               </Form.Item>)}
               
 
-              <Form.Item
-                label="Description"
-                name="description"
-                rules={[
-                  {
-                    required: true,
-                    message: "Please enter a description.",
-                  },
-                ]}
-              >
-                <TextArea
-                  rows={7}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Write a short description..."
-                />
-              </Form.Item>
-            </div>
+//               <Form.Item
+//                 label="Description"
+//                 name="description"
+//                 rules={[
+//                   {
+//                     required: true,
+//                     message: "Please enter a description.",
+//                   },
+//                 ]}
+//               >
+//                 <TextArea
+//                   rows={7}
+//                   value={description}
+//                   onChange={(e) => setDescription(e.target.value)}
+//                   placeholder="Write a short description..."
+//                 />
+//               </Form.Item>
+//             </div>
 
-            {/* RIGHT SIDE */}
-            <div>
-              <Form.Item
-                label="Destination Image"
-                name="image"
-                rules={[
-                  {
-                    required: !isEditing,
-                    message: "Please upload an image.",
-                  },
-                ]}
-              >
-                <div>
-                  <label
-                    htmlFor="image-upload"
-                    className="flex flex-col items-center justify-center
-                         w-full h-80
-                         border-2 border-dashed border-gray-300
-                         rounded-xl
-                         cursor-pointer
-                         transition-all
-                         hover:border-green-600
-                         hover:bg-green-50"
-                  >
-                    {preview ? (
-                      <img
-                        src={preview}
-                        alt="Preview"
-                        className="w-full h-full object-cover rounded-xl"
-                      />
-                    ) : (
-                      <div className="text-center text-gray-500">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="w-14 h-14 mx-auto mb-3"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={1.5}
-                            d="M3 15a4 4 0 014-4h.26A8 8 0 1117 18H7a4 4 0 01-4-3zm9-7v8m0 0l-3-3m3 3l3-3"
-                          />
-                        </svg>
+//             {/* RIGHT SIDE */}
+//             <div>
+//               <Form.Item
+//                 label="Destination Image"
+//                 name="image"
+//                 rules={[
+//                   {
+//                     required: !isEditing,
+//                     message: "Please upload an image.",
+//                   },
+//                 ]}
+//               >
+//                 <div>
+//                   <label
+//                     htmlFor="image-upload"
+//                     className="flex flex-col items-center justify-center
+//                          w-full h-80
+//                          border-2 border-dashed border-gray-300
+//                          rounded-xl
+//                          cursor-pointer
+//                          transition-all
+//                          hover:border-green-600
+//                          hover:bg-green-50"
+//                   >
+//                     {preview ? (
+//                       <img
+//                         src={preview}
+//                         alt="Preview"
+//                         className="w-full h-full object-cover rounded-xl"
+//                       />
+//                     ) : (
+//                       <div className="text-center text-gray-500">
+//                         <svg
+//                           xmlns="http://www.w3.org/2000/svg"
+//                           className="w-14 h-14 mx-auto mb-3"
+//                           fill="none"
+//                           viewBox="0 0 24 24"
+//                           stroke="currentColor"
+//                         >
+//                           <path
+//                             strokeLinecap="round"
+//                             strokeLinejoin="round"
+//                             strokeWidth={1.5}
+//                             d="M3 15a4 4 0 014-4h.26A8 8 0 1117 18H7a4 4 0 01-4-3zm9-7v8m0 0l-3-3m3 3l3-3"
+//                           />
+//                         </svg>
 
-                        <p className="font-semibold text-base">
-                          Click to upload
-                        </p>
+//                         <p className="font-semibold text-base">
+//                           Click to upload
+//                         </p>
 
-                        <p className="text-sm text-gray-400 mt-1">
-                          PNG, JPG or JPEG
-                        </p>
+//                         <p className="text-sm text-gray-400 mt-1">
+//                           PNG, JPG or JPEG
+//                         </p>
 
-                        <p className="text-xs text-gray-400">
-                          Maximum file size: 5 MB
-                        </p>
-                      </div>
-                    )}
-                  </label>
+//                         <p className="text-xs text-gray-400">
+//                           Maximum file size: 5 MB
+//                         </p>
+//                       </div>
+//                     )}
+//                   </label>
 
-                  <input
-                    id="image-upload"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
-                </div>
-              </Form.Item>
-            </div>
-          </div>
+//                   <input
+//                     id="image-upload"
+//                     type="file"
+//                     accept="image/*"
+//                     className="hidden"
+//                     onChange={handleFileChange}
+//                   />
+//                 </div>
+//               </Form.Item>
+//             </div>
+//           </div>
 
-          <Form.Item className="mb-0 mt-8">
-            <div className="flex justify-end gap-4">
-              <Button size="large" onClick={handleCancel}>
-                Cancel
-              </Button>
+//           <Form.Item className="mb-0 mt-8">
+//             <div className="flex justify-end gap-4">
+//               <Button size="large" onClick={handleCancel}>
+//                 Cancel
+//               </Button>
 
-              <Button
-                type="primary"
-                htmlType="submit"
-                size="large"
-                loading={loading}
-                style={{
-                  background: "#005707",
-                  border: "none",
-                }}
-              >
-                {loading
-                  ? "Uploading..."
-                  : isEditing
-                    ? "Update Destination"
-                    : "Save Destination"}
-              </Button>
-            </div>
-          </Form.Item>
-        </Form>
-      </Modal>
-    </>
-  );
-}
+//               <Button
+//                 type="primary"
+//                 htmlType="submit"
+//                 size="large"
+//                 loading={loading}
+//                 style={{
+//                   background: "#005707",
+//                   border: "none",
+//                 }}
+//               >
+//                 {loading
+//                   ? "Uploading..."
+//                   : isEditing
+//                     ? "Update Destination"
+//                     : "Save Destination"}
+//               </Button>
+//             </div>
+//           </Form.Item>
+//         </Form>
+//       </Modal>
+//     </>
+//   );
+// }
 
 function ViewPackages() {
   const columns = [
