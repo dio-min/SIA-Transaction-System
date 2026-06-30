@@ -55,7 +55,7 @@ const deleteDestination = asyncHandler(async (req, res) => {
 });
 
 const updateDestination = asyncHandler(async (req, res) => {
-  const { destination, location, description, id } = req.body;
+  const { description, id } = req.body;
   const imageUrl = req.file ? req.file.path || req.file.secure_url || null : null;
 
   if (!id) {
@@ -65,8 +65,7 @@ const updateDestination = asyncHandler(async (req, res) => {
   }
 
   const updateFields = {
-    destination,
-    location,
+    
     description,
   };
 

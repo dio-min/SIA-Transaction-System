@@ -29,10 +29,7 @@ const packageSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
-    min_booking_advance_days: {
-        type: Number,
-        required: true,
-    },
+   
     destination: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Destination',
