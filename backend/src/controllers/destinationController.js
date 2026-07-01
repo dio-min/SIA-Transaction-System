@@ -24,7 +24,7 @@ const createDestination = asyncHandler(async (req, res) => {
 
 const getDestination = asyncHandler(async (req, res) => {
   const destinations = await Destination.find().select(
-    "destination location destinationImage rating",
+    "destination location description destinationImage rating",
   );
 
   return res.status(200).json(destinations);
@@ -55,7 +55,7 @@ const deleteDestination = asyncHandler(async (req, res) => {
 });
 
 const updateDestination = asyncHandler(async (req, res) => {
-  const { description, id } = req.body;
+  const { id, destination, location, description } = req.body;
   const imageUrl = req.file ? req.file.path || req.file.secure_url || null : null;
 
   if (!id) {
@@ -64,28 +64,65 @@ const updateDestination = asyncHandler(async (req, res) => {
     });
   }
 
-  const updateFields = {
-    
-    description,
-  };
+  const updateFields = {};
+
+  if (destination !== undefined) {
+    updateFields.destination = destination;
+  }
+
+  if (location !== undefined) {
+    updateFields.location = location;
+  }
+
+  if (description !== undefined) {
+    updateFields.description = description;
+  }
 
   if (imageUrl) {
     updateFields.destinationImage = imageUrl;
   }
 
-  const updateddestination = await Destination.findByIdAndUpdate(
+  if (Object.keys(updateFields).length === 0) {
+    return res.status(400).json({ message: "No update fields provided." });
+  }
+
+  const updatedDestination = await Destination.findByIdAndUpdate(
     id,
     updateFields,
     { new: true, runValidators: true },
   );
 
-  if (!updateddestination) {
+  if (!updatedDestination) {
     return res.status(404).json({ message: "Destination not found." });
   }
 
-  res.status(200).json(updateddestination);
+  res.status(200).json(updatedDestination);
 });
   
+const rateDestination = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { rating } = req.body;
 
+  if (!id) {
+    return res.status(400).json({ message: "Destination ID is required." });
+  }
 
-module.exports = { createDestination, getDestination, deleteDestination, updateDestination };
+  const value = Number(rating);
+  if (!Number.isFinite(value) || value < 1 || value > 5) {
+    return res.status(400).json({ message: "Rating must be between 1 and 5." });
+  }
+
+  const destination = await Destination.findById(id);
+  if (!destination) {
+    return res.status(404).json({ message: "Destination not found." });
+  }
+
+  const currentRating = Number(destination.rating || 0);
+  const updatedRating = (currentRating + value) / 2;
+  destination.rating = Number(updatedRating.toFixed(1));
+  await destination.save();
+
+  res.status(200).json(destination);
+});
+
+module.exports = { createDestination, getDestination, deleteDestination, updateDestination, rateDestination };

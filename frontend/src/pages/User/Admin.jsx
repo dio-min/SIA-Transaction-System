@@ -3,6 +3,7 @@ import {
   Layout,
   Menu,
   Input,
+  InputNumber,
   Button,
   Form,
   message,
@@ -10,6 +11,7 @@ import {
   Table,
   Space,
   ConfigProvider,
+  Select,
 } from "antd";
 import { LoadingOutlined, PlusOutlined } from "@ant-design/icons";
 import { useState, useEffect } from "react";
@@ -27,7 +29,14 @@ const getBase64 = (img, callback) => {
 };
 
 function Admin() {
-  const [selectedMenu, setSelectedMenu] = useState("1");
+  // so that the current page is still the same when it is refreshed
+  const [selectedMenu, setSelectedMenu] = useState(() => {
+    return localStorage.getItem("adminSelectedMenu") || "1";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("adminSelectedMenu", selectedMenu);
+  }, [selectedMenu]);
 
   const renderContent = () => {
     if (selectedMenu === "2") {
@@ -43,9 +52,7 @@ function Admin() {
     if (selectedMenu === "3") {
       return (
         <div className="rounded-xl bg-white p-8 shadow-sm">
-          <h2 className="text-2xl font-semibold" style={{ color: "#003705" }}>
-            Packages
-          </h2>
+          
           <ViewPackages />
         </div>
       );
@@ -105,6 +112,7 @@ function Navbar({ selectedKey, onSelect }) {
 
   const handleSignOut = () => {
     localStorage.removeItem("rememberedLogin");
+    localStorage.removeItem("adminSelectedMenu");
     message.success("Signed out successfully.");
     navigate("/");
   };
@@ -157,6 +165,7 @@ function Navbar({ selectedKey, onSelect }) {
 }
 
 function AddDestination({ editDestination, onUpdateComplete, onClose }) {
+  const [form] = Form.useForm();
   const [editID, setEditID] = useState("");
   const [messageApi, contextHolder] = message.useMessage();
   const [destination, setDestination] = useState("");
@@ -170,17 +179,25 @@ function AddDestination({ editDestination, onUpdateComplete, onClose }) {
 
   useEffect(() => {
     if (editDestination) {
+      const nextValues = {
+        destination: editDestination.destination || "",
+        location: editDestination.location || "",
+        description: editDestination.description || "",
+      };
+
       setIsModalOpen(true);
-      setDestination(editDestination.destination || "");
-      setLocation(editDestination.location || "");
-      setDescription(editDestination.description || "");
+      form.setFieldsValue(nextValues);
+      setDestination(nextValues.destination);
+      setLocation(nextValues.location);
+      setDescription(nextValues.description);
       setEditID(editDestination._id || "");
       setPreview(editDestination.destinationImage || null);
       setImage(editDestination.destinationImage || null);
     }
-  }, [editDestination]);
+  }, [editDestination, form]);
 
   const clearForm = () => {
+    form.resetFields();
     setEditID("");
     setDestination("");
     setLocation("");
@@ -226,6 +243,7 @@ function AddDestination({ editDestination, onUpdateComplete, onClose }) {
     });
 
     try {
+      const values = await form.validateFields();
       const formData = new FormData();
 
       if (image instanceof File) {
@@ -234,7 +252,9 @@ function AddDestination({ editDestination, onUpdateComplete, onClose }) {
 
       if (isEditing) {
         formData.append("id", editID);
-        formData.append("description", description);
+        formData.append("destination", values.destination ?? destination);
+        formData.append("location", values.location ?? location);
+        formData.append("description", values.description ?? description);
         await axios.put(
           "http://localhost:5000/api/destinations/updateDestination",
           formData,
@@ -247,9 +267,9 @@ function AddDestination({ editDestination, onUpdateComplete, onClose }) {
           content: "Updated successfully.",
         });
       } else {
-        formData.append("destination", destination);
-        formData.append("location", location);
-        formData.append("description", description);
+        formData.append("destination", values.destination ?? destination);
+        formData.append("location", values.location ?? location);
+        formData.append("description", values.description ?? description);
         await axios.post(
           "http://localhost:5000/api/destinations/createDestination",
           formData,
@@ -294,6 +314,7 @@ function AddDestination({ editDestination, onUpdateComplete, onClose }) {
         width={850}
       >
         <Form
+          form={form}
           name="add-destination"
           layout="vertical"
           autoComplete="off"
@@ -306,67 +327,71 @@ function AddDestination({ editDestination, onUpdateComplete, onClose }) {
           <div className="grid grid-cols-2 gap-8">
             {/* LEFT SIDE */}
             <div>
-              {editID ? (
-                <Form.Item
-                  label="Destination Name"
-                  name="name"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please enter the destination name.",
-                    },
-                  ]}
-                >
-                  <Input
-                    size="large"
-                    value={destination}
-                    onChange={(e) => setDestination(e.target.value)}
-                    placeholder="e.g. Mount Pulag"
-                    disabled
-                  />
-                </Form.Item>
+              {isEditing ? (
+                <>
+                  <Form.Item label="Destination Name">
+                    <Input
+                      size="large"
+                      value={destination}
+                      placeholder="e.g. Mount Pulag"
+                      disabled
+                    />
+                  </Form.Item>
+
+                  <Form.Item label="Location">
+                    <Input
+                      size="large"
+                      value={location}
+                      placeholder="e.g. Benguet"
+                      disabled
+                    />
+                  </Form.Item>
+                </>
               ) : (
-                <Input
-                  size="large"
-                  value={destination}
-                  onChange={(e) => setDestination(e.target.value)}
-                  placeholder="e.g. Mount Pulag"
-                />
+                <>
+                  <Form.Item
+                    label="Destination Name"
+                    name="destination"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please enter the destination name.",
+                      },
+                    ]}
+                  >
+                    <Input
+                      size="large"
+                      value={destination}
+                      onChange={(e) => {
+                        setDestination(e.target.value);
+                        form.setFieldsValue({ destination: e.target.value });
+                      }}
+                      placeholder="e.g. Mount Pulag"
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    label="Location"
+                    name="location"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please enter the location.",
+                      },
+                    ]}
+                  >
+                    <Input
+                      size="large"
+                      value={location}
+                      onChange={(e) => {
+                        setLocation(e.target.value);
+                        form.setFieldsValue({ location: e.target.value });
+                      }}
+                      placeholder="e.g. Benguet"
+                    />
+                  </Form.Item>
+                </>
               )}
-              {editID ? (<Form.Item
-                label="Location"
-                name="location"
-                rules={[
-                  {
-                    required: true,
-                    message: "Please enter the location.",
-                  },
-                ]}
-              >
-                <Input
-                  size="large"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="e.g. Benguet"
-                  disabled
-                />
-              </Form.Item>):(<Form.Item
-                label="Location"
-                name="location"
-                rules={[
-                  {
-                    required: true,
-                    message: "Please enter the location.",
-                  },
-                ]}
-              >
-                <Input
-                  size="large"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="e.g. Benguet"
-                />
-              </Form.Item>)}
               
 
               <Form.Item
@@ -382,7 +407,10 @@ function AddDestination({ editDestination, onUpdateComplete, onClose }) {
                 <TextArea
                   rows={7}
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={(e) => {
+                    setDescription(e.target.value);
+                    form.setFieldsValue({ description: e.target.value });
+                  }}
                   placeholder="Write a short description..."
                 />
               </Form.Item>
@@ -679,248 +707,270 @@ function ViewDestination() {
   );
 }
 
-// function AddPackages({ editDestination, onUpdateComplete, onClose }) {
-//   const [package, setPackage]= useState("");
-//   const [type, setType]=useState("");
-//   const [description, setDescription]=useState("");
-//   const [duration, setDuration]= useState("");
-//   const [difficulty, setDifficulty]= useState("");;
-//   const [messageApi, contextHolder] = message.useMessage();
-//   const [price, setPrice]= useState();
-//   const [maxCapacity, setMaxCapcity]= useState("");
-//   const [destination, setDestination]= useState("");
-//   const [isModalOpen, setIsModalOpen] = useState(false);
-//   const [loading, setLoading] = useState(false);
 
-//   return (
-//     <>
-//       {contextHolder}
-//       <Button
-//         type="primary"
-//         onClick={showModal}
-//         style={{ backgroundColor: "#005707" }}
-//       >
-//         <PlusOutlined />
-//         Add Packages
-//       </Button>
-//       <Modal
-//         title="Add New Destination"
-//         open={isModalOpen}
-//         onCancel={handleCancel}
-//         footer={null}
-//         destroyOnClose
-//         width={850}
-//       >
-//         <Form
-//           name="add-destination"
-//           layout="vertical"
-//           autoComplete="off"
-//           onFinish={handleSubmit}
-//         >
-//           <p className="text-gray-500 mb-6">
-//             Fill in the details for your new destination.
-//           </p>
+function AddPackage({ editPackage, onUpdateComplete, onClose }) {
+  const [form] = Form.useForm();
+  const [messageApi, contextHolder] = message.useMessage();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [destinations, setDestinations] = useState([]);
+  const [isEditing, setIsEditing] = useState(false);
 
-//           <div className="grid grid-cols-2 gap-8">
-//             {/* LEFT SIDE */}
-//             <div>
-//               {editID ? (
-//                 <Form.Item
-//                   label="Destination Name"
-//                   name="name"
-//                   rules={[
-//                     {
-//                       required: true,
-//                       message: "Please enter the destination name.",
-//                     },
-//                   ]}
-//                 >
-//                   <Input
-//                     size="large"
-//                     value={destination}
-//                     onChange={(e) => setDestination(e.target.value)}
-//                     placeholder="e.g. Mount Pulag"
-//                     disabled
-//                   />
-//                 </Form.Item>
-//               ) : (
-//                 <Input
-//                   size="large"
-//                   value={destination}
-//                   onChange={(e) => setDestination(e.target.value)}
-//                   placeholder="e.g. Mount Pulag"
-//                 />
-//               )}
-//               {editID ? (<Form.Item
-//                 label="Location"
-//                 name="location"
-//                 rules={[
-//                   {
-//                     required: true,
-//                     message: "Please enter the location.",
-//                   },
-//                 ]}
-//               >
-//                 <Input
-//                   size="large"
-//                   value={location}
-//                   onChange={(e) => setLocation(e.target.value)}
-//                   placeholder="e.g. Benguet"
-//                   disabled
-//                 />
-//               </Form.Item>):(<Form.Item
-//                 label="Location"
-//                 name="location"
-//                 rules={[
-//                   {
-//                     required: true,
-//                     message: "Please enter the location.",
-//                   },
-//                 ]}
-//               >
-//                 <Input
-//                   size="large"
-//                   value={location}
-//                   onChange={(e) => setLocation(e.target.value)}
-//                   placeholder="e.g. Benguet"
-//                 />
-//               </Form.Item>)}
-              
+  const fetchDestinations = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/destinations/getDestination");
+      setDestinations(res.data || []);
+    } catch (error) {
+      console.error("Error fetching destinations:", error);
+      messageApi.error("Failed to load destinations.");
+    }
+  };
 
-//               <Form.Item
-//                 label="Description"
-//                 name="description"
-//                 rules={[
-//                   {
-//                     required: true,
-//                     message: "Please enter a description.",
-//                   },
-//                 ]}
-//               >
-//                 <TextArea
-//                   rows={7}
-//                   value={description}
-//                   onChange={(e) => setDescription(e.target.value)}
-//                   placeholder="Write a short description..."
-//                 />
-//               </Form.Item>
-//             </div>
+  const clearForm = () => {
+    form.resetFields();
+    setIsEditing(false);
+  };
 
-//             {/* RIGHT SIDE */}
-//             <div>
-//               <Form.Item
-//                 label="Destination Image"
-//                 name="image"
-//                 rules={[
-//                   {
-//                     required: !isEditing,
-//                     message: "Please upload an image.",
-//                   },
-//                 ]}
-//               >
-//                 <div>
-//                   <label
-//                     htmlFor="image-upload"
-//                     className="flex flex-col items-center justify-center
-//                          w-full h-80
-//                          border-2 border-dashed border-gray-300
-//                          rounded-xl
-//                          cursor-pointer
-//                          transition-all
-//                          hover:border-green-600
-//                          hover:bg-green-50"
-//                   >
-//                     {preview ? (
-//                       <img
-//                         src={preview}
-//                         alt="Preview"
-//                         className="w-full h-full object-cover rounded-xl"
-//                       />
-//                     ) : (
-//                       <div className="text-center text-gray-500">
-//                         <svg
-//                           xmlns="http://www.w3.org/2000/svg"
-//                           className="w-14 h-14 mx-auto mb-3"
-//                           fill="none"
-//                           viewBox="0 0 24 24"
-//                           stroke="currentColor"
-//                         >
-//                           <path
-//                             strokeLinecap="round"
-//                             strokeLinejoin="round"
-//                             strokeWidth={1.5}
-//                             d="M3 15a4 4 0 014-4h.26A8 8 0 1117 18H7a4 4 0 01-4-3zm9-7v8m0 0l-3-3m3 3l3-3"
-//                           />
-//                         </svg>
+  const showModal = async () => {
+    clearForm();
+    await fetchDestinations();
+    setIsModalOpen(true);
+  };
 
-//                         <p className="font-semibold text-base">
-//                           Click to upload
-//                         </p>
+  const handleCancel = () => {
+    setIsModalOpen(false);
+    clearForm();
+    if (onClose) onClose();
+  };
 
-//                         <p className="text-sm text-gray-400 mt-1">
-//                           PNG, JPG or JPEG
-//                         </p>
+  useEffect(() => {
+    if (editPackage) {
+      setIsEditing(true);
+      setIsModalOpen(true);
+      form.setFieldsValue({
+        packageName: editPackage.packageName || "",
+        type: editPackage.type || "",
+        description: editPackage.description || "",
+        duration_days: editPackage.duration_days || "",
+        difficulty_level: editPackage.difficulty_level || "",
+        price: editPackage.price || 0,
+        max_capacity: editPackage.max_capacity || 0,
+        min_booking_advance_days: editPackage.min_booking_advance_days || 0,
+        destination: editPackage.destination?._id || editPackage.destination || "",
+      });
+      fetchDestinations();
+    }
+  }, [editPackage, form]);
 
-//                         <p className="text-xs text-gray-400">
-//                           Maximum file size: 5 MB
-//                         </p>
-//                       </div>
-//                     )}
-//                   </label>
+  const handleSubmit = async (values) => {
+    setLoading(true);
+    try {
+      const payload = {
+        ...values,
+        destination: values.destination,
+      };
 
-//                   <input
-//                     id="image-upload"
-//                     type="file"
-//                     accept="image/*"
-//                     className="hidden"
-//                     onChange={handleFileChange}
-//                   />
-//                 </div>
-//               </Form.Item>
-//             </div>
-//           </div>
+      if (isEditing) {
+        await axios.put(`http://localhost:5000/api/packages/${editPackage._id}`, payload);
+        messageApi.success("Package updated successfully.");
+      } else {
+        await axios.post("http://localhost:5000/api/packages/createPackage", payload);
+        messageApi.success("Package added successfully.");
+      }
 
-//           <Form.Item className="mb-0 mt-8">
-//             <div className="flex justify-end gap-4">
-//               <Button size="large" onClick={handleCancel}>
-//                 Cancel
-//               </Button>
+      setIsModalOpen(false);
+      clearForm();
+      if (onUpdateComplete) onUpdateComplete();
+    } catch (error) {
+      console.error("Package save error:", error.response?.data ?? error.message);
+      messageApi.error("Unable to save package. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-//               <Button
-//                 type="primary"
-//                 htmlType="submit"
-//                 size="large"
-//                 loading={loading}
-//                 style={{
-//                   background: "#005707",
-//                   border: "none",
-//                 }}
-//               >
-//                 {loading
-//                   ? "Uploading..."
-//                   : isEditing
-//                     ? "Update Destination"
-//                     : "Save Destination"}
-//               </Button>
-//             </div>
-//           </Form.Item>
-//         </Form>
-//       </Modal>
-//     </>
-//   );
-// }
+  return (
+    <>
+      {contextHolder}
+      <Button
+        type="primary"
+        onClick={showModal}
+        style={{ backgroundColor: "#005707" }}
+      >
+        <PlusOutlined />
+        Add Package
+      </Button>
+
+      <Modal
+        title={isEditing ? "Update Package" : "Add New Package"}
+        open={isModalOpen}
+        onCancel={handleCancel}
+        footer={null}
+        destroyOnClose
+        width={850}
+      >
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <Form.Item
+                label="Package Name"
+                name="packageName"
+                rules={[{ required: true, message: "Please enter a package name." }]}
+              >
+                <Input placeholder="e.g. Adventure Escape" />
+              </Form.Item>
+
+              <Form.Item
+                label="Type"
+                name="type"
+                rules={[{ required: true, message: "Please enter the package type." }]}
+              >
+                <Input placeholder="e.g. Adventure" />
+              </Form.Item>
+
+              <Form.Item
+                label="Description"
+                name="description"
+                rules={[{ required: true, message: "Please enter a description." }]}
+              >
+                <TextArea rows={5} placeholder="Describe the package..." />
+              </Form.Item>
+
+              <Form.Item
+                label="Destination"
+                name="destination"
+                rules={[{ required: true, message: "Please select a destination." }]}
+              >
+                <Select
+                  placeholder="Select destination"
+                  options={destinations.map((destination) => ({
+                    label: destination.destination,
+                    value: destination._id,
+                  }))}
+                />
+              </Form.Item>
+            </div>
+
+            <div>
+              <Form.Item
+                label="Duration (days)"
+                name="duration_days"
+                rules={[{ required: true, message: "Please enter the duration." }]}
+              >
+                <Input placeholder="e.g. 3 Days / 2 Nights" />
+              </Form.Item>
+
+              <Form.Item
+                label="Difficulty"
+                name="difficulty_level"
+                rules={[{ required: true, message: "Please enter the difficulty level." }]}
+              >
+                <Input placeholder="e.g. Moderate" />
+              </Form.Item>
+
+              <Form.Item
+                label="Price"
+                name="price"
+                rules={[{ required: true, message: "Please enter the price." }]}
+              >
+                <InputNumber min={0} style={{ width: "100%" }} />
+              </Form.Item>
+
+              <Form.Item
+                label="Max Capacity"
+                name="max_capacity"
+                rules={[{ required: true, message: "Please enter max capacity." }]}
+              >
+                <InputNumber min={1} style={{ width: "100%" }} />
+              </Form.Item>
+
+              <Form.Item
+                label="Minimum Booking Advance (days)"
+                name="min_booking_advance_days"
+                rules={[{ required: true, message: "Please enter the advance days." }]}
+              >
+                <InputNumber min={0} style={{ width: "100%" }} />
+              </Form.Item>
+            </div>
+          </div>
+
+          <Form.Item className="mb-0 mt-6">
+            <div className="flex justify-end gap-4">
+              <Button onClick={handleCancel}>Cancel</Button>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                style={{ backgroundColor: "#005707", border: "none" }}
+              >
+                {loading ? "Saving..." : isEditing ? "Update Package" : "Save Package"}
+              </Button>
+            </div>
+          </Form.Item>
+        </Form>
+      </Modal>
+    </>
+  );
+}
 
 function ViewPackages() {
+  const [items, setItems] = useState([]);
+  const [searchText, setSearchText] = useState("");
+  const [editPackage, setEditPackage] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const fetchData = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/packages/getAllPackages");
+      setItems(
+        (res.data || []).map((item) => ({
+          ...item,
+          key: item._id,
+        })),
+      );
+    } catch (error) {
+      console.error("Error fetching packages:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [refreshKey]);
+
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/packages/${id}`);
+      setRefreshKey((prev) => prev + 1);
+      message.success("Package deleted successfully.");
+    } catch (error) {
+      console.error("Error deleting package:", error);
+      message.error("Unable to delete package.");
+    }
+  };
+
+  const handleUpdate = (pkg) => {
+    setEditPackage(pkg);
+  };
+
+  const handleUpdateComplete = () => {
+    setEditPackage(null);
+    setRefreshKey((prev) => prev + 1);
+  };
+
+  const handleEditModalClose = () => {
+    setEditPackage(null);
+  };
+
   const columns = [
     {
       title: "Destination",
-      dataIndex: "destination",
       key: "destination",
+      render: (_, record) => record.destination?.destination || "-",
     },
     {
       title: "Package",
       dataIndex: "packageName",
-      key: "destinationImage",
+      key: "packageName",
     },
     {
       title: "Type",
@@ -931,37 +981,84 @@ function ViewPackages() {
       title: "Price",
       dataIndex: "price",
       key: "price",
+      render: (value) => `₱${Number(value || 0).toLocaleString()}`,
     },
     {
-      title: "Max capacity",
+      title: "Max Capacity",
       dataIndex: "max_capacity",
       key: "max_capacity",
     },
     {
       title: "Action",
-      dataIndex: "action",
       key: "action",
+      render: (_, record) => (
+        <Space wrap size="middle">
+          <Button type="primary" onClick={() => handleUpdate(record)}>
+            Update
+          </Button>
+          <Button
+            danger
+            type="primary"
+            onClick={() =>
+              Modal.confirm({
+                title: "Delete package",
+                content: `Are you sure you want to delete ${record.packageName}?`,
+                okText: "Delete",
+                okType: "danger",
+                onOk: () => handleDelete(record._id),
+              })
+            }
+          >
+            Delete
+          </Button>
+        </Space>
+      ),
     },
   ];
 
+  const filteredItems = items.filter((item) => {
+    const query = searchText.toLowerCase();
+    return [item.packageName, item.type, item.destination?.destination].some((value) =>
+      String(value || "").toLowerCase().includes(query),
+    );
+  });
+
   return (
-    <>
-      <ConfigProvider
-        theme={{
-          components: {
-            Table: {
-              headerBg: "#005707",
-              headerColor: "#fff",
-              rowHoverBg: "#ffffff",
-              headerSplitColor: "#ffffff",
-              borderColor: "#005707",
-            },
+    <ConfigProvider
+      theme={{
+        components: {
+          Table: {
+            headerBg: "#005707",
+            headerColor: "#fff",
+            rowHoverBg: "#ffffff",
+            headerSplitColor: "#ffffff",
+            borderColor: "#005707",
           },
-        }}
-      >
-        <Table columns={columns} pagination={{ pageSize: 4 }} />
-      </ConfigProvider>
-    </>
+        },
+      }}
+    >
+      <div className="mb-3 flex justify-between rounded-xl bg-white p-3 shadow-sm">
+        <h2 className="text-2xl font-semibold" style={{ color: "#003705" }}>
+          Manage Packages
+        </h2>
+        <div className="flex gap-3">
+          <Input
+            placeholder="Search packages"
+            allowClear
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ maxWidth: 320 }}
+          />
+          <AddPackage
+            editPackage={editPackage}
+            onUpdateComplete={handleUpdateComplete}
+            onClose={handleEditModalClose}
+          />
+        </div>
+      </div>
+
+      <Table columns={columns} dataSource={filteredItems} pagination={{ pageSize: 4 }} />
+    </ConfigProvider>
   );
 }
 

@@ -2,7 +2,7 @@ const User = require('../models/user');
 const asyncHandler = require('express-async-handler');
 
 const registerUser = asyncHandler(async (req, res) => {
-    const { username, email, password } = req.body;
+    const { username, email, password, role } = req.body;
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -13,7 +13,8 @@ const registerUser = asyncHandler(async (req, res) => {
     const newUser = new User({
         username,
         email,
-        password, // In production, make sure to hash the password before saving
+        password,
+        role: role || 'traveler', // In production, make sure to hash the password before saving
     });
 
     const savedUser = await newUser.save();
@@ -36,7 +37,12 @@ const loginUser = asyncHandler(async (req, res) => {
 
   res.status(200).json({
     message: "Login successful",
-    user,
+    user: {
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+    },
   });
 });
 

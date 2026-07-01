@@ -50,10 +50,14 @@ function Login() {
         localStorage.removeItem("rememberedLogin");
       }
 
+      const userRole = res.data?.user?.role;
       message.success("Login successful!");
-      console.log(res.data);
 
-      navigate("/admin");
+      if (userRole === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/traveler");
+      }
     } catch (err) {
       message.error("Invalid username or password.");
       console.error(err);
