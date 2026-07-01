@@ -52,8 +52,15 @@ function Admin() {
     if (selectedMenu === "3") {
       return (
         <div className="rounded-xl bg-white p-8 shadow-sm">
-          
           <ViewPackages />
+        </div>
+      );
+    }
+
+    if (selectedMenu === "4") {
+      return (
+        <div className="rounded-xl bg-white p-8 shadow-sm">
+          <CreateAdminUser />
         </div>
       );
     }
@@ -130,6 +137,10 @@ function Navbar({ selectedKey, onSelect }) {
       key: "3",
       label: "Packages",
     },
+    {
+      key: "4",
+      label: "Create Admin",
+    },
   ];
 
   return (
@@ -160,6 +171,107 @@ function Navbar({ selectedKey, onSelect }) {
           Sign Out
         </Button>
       </div>
+    </div>
+  );
+}
+
+function CreateAdminUser() {
+  const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (values) => {
+    setLoading(true);
+    try {
+      await axios.post("http://localhost:5000/api/users/register", {
+        username: values.username,
+        email: values.email,
+        password: values.password,
+        role: "admin",
+      });
+
+      message.success("Admin user created successfully.");
+      form.resetFields();
+    } catch (error) {
+      console.error("Create admin error:", error.response?.data ?? error.message);
+      message.error("Unable to create admin user. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      <h2 className="text-2xl font-semibold" style={{ color: "#003705" }}>
+        Create Admin User
+      </h2>
+      <p className="mt-2 text-gray-600">
+        Add a new administrator account for the system.
+      </p>
+
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleSubmit}
+        className="mt-6 max-w-xl"
+      >
+        <Form.Item
+          label="Username"
+          name="username"
+          rules={[{ required: true, message: "Please enter a username." }]}
+        >
+          <Input size="large" placeholder="Enter username" />
+        </Form.Item>
+
+        <Form.Item
+          label="Email"
+          name="email"
+          rules={[
+            { required: true, message: "Please enter an email." },
+            { type: "email", message: "Please enter a valid email." },
+          ]}
+        >
+          <Input size="large" placeholder="Enter email" />
+        </Form.Item>
+
+        <Form.Item
+          label="Password"
+          name="password"
+          rules={[{ required: true, message: "Please enter a password." }]}
+        >
+          <Input.Password size="large" placeholder="Enter password" />
+        </Form.Item>
+
+        <Form.Item
+          label="Confirm Password"
+          name="confirmPassword"
+          dependencies={["password"]}
+          rules={[
+            { required: true, message: "Please confirm your password." },
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                if (!value || getFieldValue("password") === value) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(new Error("Passwords do not match."));
+              },
+            }),
+          ]}
+        >
+          <Input.Password size="large" placeholder="Confirm password" />
+        </Form.Item>
+
+        <Form.Item>
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={loading}
+            size="large"
+            style={{ backgroundColor: "#005707", border: "none" }}
+          >
+            {loading ? "Creating..." : "Create Admin"}
+          </Button>
+        </Form.Item>
+      </Form>
     </div>
   );
 }
