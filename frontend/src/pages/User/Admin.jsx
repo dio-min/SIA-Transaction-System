@@ -116,7 +116,7 @@ function Admin() {
 
 function Navbar({ selectedKey, onSelect }) {
   const navigate = useNavigate();
-
+   
   const handleSignOut = () => {
     localStorage.removeItem("rememberedLogin");
     localStorage.removeItem("adminSelectedMenu");
@@ -139,7 +139,7 @@ function Navbar({ selectedKey, onSelect }) {
     },
     {
       key: "4",
-      label: "Create Admin",
+      label: "Users",
     },
   ];
 
@@ -201,6 +201,8 @@ function CreateAdminUser() {
 
   return (
     <div>
+
+
       <h2 className="text-2xl font-semibold" style={{ color: "#003705" }}>
         Create Admin User
       </h2>
@@ -813,7 +815,7 @@ function ViewDestination() {
       <Table
         columns={columns}
         dataSource={filteredItems}
-        pagination={{ pageSize: 4 }}
+        pagination={{ pageSize: 10   }}
       />
     </ConfigProvider>
   );
