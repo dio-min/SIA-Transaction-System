@@ -3,6 +3,40 @@ const Package = require('../models/packages');
 const Destination = require('../models/destination');
 const asyncHandler = require('express-async-handler');
 
+const normalizeDestinationIds = (destination) => {
+  if (Array.isArray(destination)) {
+    return destination.filter(Boolean);
+  }
+
+  if (destination === undefined || destination === null || destination === '') {
+    return [];
+  }
+
+  return [destination];
+};
+
+const validateDestinationIds = async (destinationIds, res) => {
+  if (destinationIds.length < 1) {
+    res.status(400).json({ message: 'Please select at least 1 destination.' });
+    return false;
+  }
+
+  for (const destinationId of destinationIds) {
+    if (!mongoose.Types.ObjectId.isValid(destinationId)) {
+      res.status(400).json({ message: 'Invalid destination ID.' });
+      return false;
+    }
+
+    const destinationExists = await Destination.findById(destinationId);
+    if (!destinationExists) {
+      res.status(404).json({ message: 'Destination not found.' });
+      return false;
+    }
+  }
+
+  return true;
+};
+
 const createPackage = asyncHandler(async (req, res) => {
   const {
     name,
@@ -18,6 +52,7 @@ const createPackage = asyncHandler(async (req, res) => {
   } = req.body;
 
   const finalPackageName = packageName || name;
+  const destinationIds = normalizeDestinationIds(destination);
 
   if (
     !finalPackageName ||
@@ -27,18 +62,14 @@ const createPackage = asyncHandler(async (req, res) => {
     !difficulty_level ||
     !price ||
     !max_capacity ||
-    !destination
+    !destinationIds.length
   ) {
     return res.status(400).json({ message: 'Please provide all required package fields.' });
   }
 
-  if (!mongoose.Types.ObjectId.isValid(destination)) {
-    return res.status(400).json({ message: 'Invalid destination ID.' });
-  }
-
-  const destinationExists = await Destination.findById(destination);
-  if (!destinationExists) {
-    return res.status(404).json({ message: 'Destination not found.' });
+  const destinationsAreValid = await validateDestinationIds(destinationIds, res);
+  if (!destinationsAreValid) {
+    return;
   }
 
   const newPackage = new Package({
@@ -50,7 +81,7 @@ const createPackage = asyncHandler(async (req, res) => {
     price,
     max_capacity,
     min_booking_advance_days,
-    destination,
+    destination: destinationIds,
   });
 
   const savedPackage = await newPackage.save();
@@ -102,14 +133,14 @@ const updatePackage = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: 'Package not found.' });
   }
 
-  if (destination) {
-    if (!mongoose.Types.ObjectId.isValid(destination)) {
-      return res.status(400).json({ message: 'Invalid destination ID.' });
-    }
+  const destinationIds = destination !== undefined ? normalizeDestinationIds(destination) : undefined;
 
-    const destinationExists = await Destination.findById(destination);
-    if (!destinationExists) {
-      return res.status(404).json({ message: 'Destination not found.' });
+  if (destinationIds !== undefined) {
+    if (destinationIds.length > 0) {
+      const destinationsAreValid = await validateDestinationIds(destinationIds, res);
+      if (!destinationsAreValid) {
+        return;
+      }
     }
   }
 
@@ -122,7 +153,11 @@ const updatePackage = asyncHandler(async (req, res) => {
   if (price !== undefined) updateData.price = price;
   if (max_capacity !== undefined) updateData.max_capacity = max_capacity;
   if (min_booking_advance_days !== undefined) updateData.min_booking_advance_days = min_booking_advance_days;
-  if (destination !== undefined) updateData.destination = destination;
+  if (destinationIds !== undefined && destinationIds.length > 0) {
+    updateData.destination = destinationIds;
+  } else if (destination !== undefined) {
+    updateData.destination = packageItem.destination;
+  }
 
   const updatedPackage = await Package.findByIdAndUpdate(id, updateData, {
     new: true,

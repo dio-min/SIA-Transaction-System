@@ -828,6 +828,12 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
   const [destinations, setDestinations] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
 
+  const getDestinationIds = (value) => {
+    const items = Array.isArray(value) ? value : value ? [value] : [];
+
+    return items.map((item) => item?._id || item).filter(Boolean);
+  };
+
   const fetchDestinations = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/destinations/getDestination");
@@ -868,7 +874,7 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
         price: editPackage.price || 0,
         max_capacity: editPackage.max_capacity || 0,
         min_booking_advance_days: editPackage.min_booking_advance_days || 0,
-        destination: editPackage.destination?._id || editPackage.destination || "",
+        destination: getDestinationIds(editPackage.destination),
       });
       fetchDestinations();
     }
@@ -877,9 +883,17 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
   const handleSubmit = async (values) => {
     setLoading(true);
     try {
+      const destinationIds = Array.isArray(values.destination)
+        ? values.destination
+        : values.destination
+          ? [values.destination]
+          : [];
       const payload = {
         ...values,
-        destination: values.destination,
+        destination:
+          isEditing && destinationIds.length === 0
+            ? getDestinationIds(editPackage?.destination)
+            : destinationIds,
       };
 
       if (isEditing) {
@@ -949,12 +963,20 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
               </Form.Item>
 
               <Form.Item
-                label="Destination"
+                label="Destinations"
                 name="destination"
-                rules={[{ required: true, message: "Please select a destination." }]}
+                rules={[
+                  {
+                    validator: (_, value) =>
+                      Array.isArray(value) && value.length >= 1
+                        ? Promise.resolve()
+                        : Promise.reject(new Error("Please select at least 1 destination.")),
+                  },
+                ]}
               >
                 <Select
-                  placeholder="Select destination"
+                  mode="multiple"
+                  placeholder="Select 1 or more destinations"
                   options={destinations.map((destination) => ({
                     label: destination.destination,
                     value: destination._id,
@@ -977,7 +999,11 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
                 name="difficulty_level"
                 rules={[{ required: true, message: "Please enter the difficulty level." }]}
               >
-                <Input placeholder="e.g. Moderate" />
+                <Select placeholder="Select difficulty level">
+                  <Select.Option value="Easy">Easy</Select.Option>
+                  <Select.Option value="Moderate">Moderate</Select.Option>
+                  <Select.Option value="Hard">Hard</Select.Option>
+                </Select>
               </Form.Item>
 
               <Form.Item
@@ -1031,6 +1057,16 @@ function ViewPackages() {
   const [editPackage, setEditPackage] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  const getDestinationLabel = (destination) => {
+    const destinationList = Array.isArray(destination) ? destination : destination ? [destination] : [];
+
+    const labels = destinationList
+      .map((item) => item?.destination || item?.location || "")
+      .filter(Boolean);
+
+    return labels.length > 0 ? labels.join(", ") : "-";
+  };
+
   const fetchData = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/packages/getAllPackages");
@@ -1075,9 +1111,9 @@ function ViewPackages() {
 
   const columns = [
     {
-      title: "Destination",
+      title: "Destinations",
       key: "destination",
-      render: (_, record) => record.destination?.destination || "-",
+      render: (_, record) => getDestinationLabel(record.destination),
     },
     {
       title: "Package",
@@ -1130,7 +1166,7 @@ function ViewPackages() {
 
   const filteredItems = items.filter((item) => {
     const query = searchText.toLowerCase();
-    return [item.packageName, item.type, item.destination?.destination].some((value) =>
+    return [item.packageName, item.type, getDestinationLabel(item.destination)].some((value) =>
       String(value || "").toLowerCase().includes(query),
     );
   });

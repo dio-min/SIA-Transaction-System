@@ -35,9 +35,19 @@ const packageSchema = new mongoose.Schema({
     default: 0,
   },
   destination: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Destination',
+    type: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Destination',
+      },
+    ],
     required: true,
+    validate: {
+      validator(value) {
+        return Array.isArray(value) && value.length >= 1;
+      },
+      message: 'Please select at least 1 destination.',
+    },
   },
 });
 
