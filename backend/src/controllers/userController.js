@@ -46,6 +46,39 @@ const loginUser = asyncHandler(async (req, res) => {
   });
 });
 
+const getUserById = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const user = await User.findById(id).select('-password');
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+
+  res.status(200).json(user);
+});
+
+const updateUserProfile = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { username, email } = req.body;
+
+  const user = await User.findById(id);
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+
+  if (username !== undefined) user.username = username;
+  if (email !== undefined) user.email = email;
+
+  const updatedUser = await user.save();
+
+  res.status(200).json({
+    _id: updatedUser._id,
+    username: updatedUser.username,
+    email: updatedUser.email,
+    role: updatedUser.role,
+  });
+});
 
 
-module.exports = { registerUser, loginUser };
+
+module.exports = { registerUser, loginUser, getUserById, updateUserProfile };

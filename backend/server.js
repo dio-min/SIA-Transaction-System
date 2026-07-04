@@ -7,7 +7,8 @@ const cors = require('cors');
 const destinationRoutes = require('./src/routers/destinationRoutes');
 const userRoutes = require('./src/routers/userRoutes');
 const packageRoutes = require('./src/routers/packageRoutes');
-
+const bookingRoutes = require('./src/routers/bookingRoutes');
+const transactionRoutes = require('./src/routers/transactionRoutes');
 
 const PORT = process.env.PORT || 5000;
 
@@ -18,6 +19,8 @@ app.use(express.json());
 app.use('/api/destinations', destinationRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/packages', packageRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/transactions', transactionRoutes);
 
 // Error handler
 app.use((err, req, res, next) => {

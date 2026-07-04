@@ -50,6 +50,12 @@ const createPackage = asyncHandler(async (req, res) => {
     min_booking_advance_days,
     destination,
   } = req.body;
+  if (!req.file) {
+    return res.status(400).json({ message: "Image file is required." });
+  }
+
+  console.log("Upload request body:", req.body);
+  console.log("Uploaded file metadata:", req.file);
 
   const finalPackageName = packageName || name;
   const destinationIds = normalizeDestinationIds(destination);
@@ -82,6 +88,7 @@ const createPackage = asyncHandler(async (req, res) => {
     max_capacity,
     min_booking_advance_days,
     destination: destinationIds,
+    packageImage: req.file.path || req.file.secure_url || req.file.url,
   });
 
   const savedPackage = await newPackage.save();
@@ -157,6 +164,9 @@ const updatePackage = asyncHandler(async (req, res) => {
     updateData.destination = destinationIds;
   } else if (destination !== undefined) {
     updateData.destination = packageItem.destination;
+  }
+  if (req.file) {
+    updateData.packageImage = req.file.path || req.file.secure_url || req.file.url;
   }
 
   const updatedPackage = await Package.findByIdAndUpdate(id, updateData, {

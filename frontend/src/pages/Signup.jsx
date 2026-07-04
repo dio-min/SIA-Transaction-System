@@ -46,7 +46,7 @@ const Signup = () => {
         size="large"
         className="rounded-full px-8 py-6 text-lg font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105 w-full sm:w-auto"
         style={{
-          background: "#005707",
+          background: "#002603",
           color: "#fff",
           fontFamily: "'Nunito', sans-serif",
           border: "none",

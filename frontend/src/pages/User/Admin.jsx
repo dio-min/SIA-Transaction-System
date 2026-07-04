@@ -637,34 +637,31 @@ function AddDestination({ editDestination, onUpdateComplete, onClose }) {
 function ViewDestination() {
   const [items, setItems] = useState([]);
   const [searchText, setSearchText] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const showModal = () => {
-    setIsModalOpen(true);
-  };
-  const handleOk = () => {
-    setIsModalOpen(false);
-  };
-  const handleCancel = () => {
-    setIsModalOpen(false);
-  };
 
+  // Delete Modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDestination, setSelectedDestination] = useState(null);
+
+  // Edit
   const [editDestination, setEditDestination] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  // Fetch Destinations
   const fetchData = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/api/destinations/getDestination",
+        "http://localhost:5000/api/destinations/getDestination"
       );
 
       setItems(
         res.data.map((item) => ({
           ...item,
           key: item._id,
-        })),
+        }))
       );
     } catch (error) {
       console.error("Error fetching destinations:", error);
+      message.error("Failed to load destinations.");
     }
   };
 
@@ -672,16 +669,42 @@ function ViewDestination() {
     fetchData();
   }, [refreshKey]);
 
-  const handleDelete = async (id) => {
+  // Show Delete Modal
+  const showModal = (record) => {
+    setSelectedDestination(record);
+    setIsModalOpen(true);
+  };
+
+  // Close Modal
+  const handleCancel = () => {
+    setIsModalOpen(false);
+    setSelectedDestination(null);
+  };
+
+  // Delete Destination
+  const handleDelete = async () => {
+    if (!selectedDestination) return;
+
     try {
-      await axios.delete(`http://localhost:5000/api/destinations/${id}`);
-      setRefreshKey((prev) => prev + 1);
-      setIsModalOpen(false);
+      await axios.delete(
+        `http://localhost:5000/api/destinations/${selectedDestination._id}`
+      );
+
+      message.success("Destination deleted successfully!");
+
+      // Remove from UI immediately
+      setItems((prev) =>
+        prev.filter((item) => item._id !== selectedDestination._id)
+      );
+
+      handleCancel();
     } catch (error) {
       console.error("Error deleting destination:", error);
+      message.error("Failed to delete destination.");
     }
   };
 
+  // Update
   const handleUpdate = (destination) => {
     setEditDestination(destination);
   };
@@ -736,45 +759,30 @@ function ViewDestination() {
       title: "Action",
       key: "action",
       render: (_, record) => (
-        <>
-          <Space wrap size="middle">
-            <Button type="primary" onClick={() => handleUpdate(record)}>
-              Update
-            </Button>
+        <Space size="middle" wrap>
+          <Button type="primary" onClick={() => handleUpdate(record)}>
+            Update
+          </Button>
 
-            <Button
-              danger
-              type="primary"
-              // onClick={() => handleDelete(record._id)}
-              onClick={showModal}
-            >
-              Delete
-            </Button>
-            <Modal
-              title="Delete Destination"
-              open={isModalOpen}
-              onCancel={handleCancel}
-              footer={null}
-              destroyOnClose
-            >
-              <p>Are you sure you want to delete {record.destination}</p>
-              <Button danger onClick={() => handleDelete(record._id)}>
-                Delete
-              </Button>
-              <Button onClick={handleCancel}>Cancel</Button>
-            </Modal>
-          </Space>
-        </>
+          <Button
+            danger
+            type="primary"
+            onClick={() => showModal(record)}
+          >
+            Delete
+          </Button>
+        </Space>
       ),
     },
   ];
 
   const filteredItems = items.filter((item) => {
     const query = searchText.toLowerCase();
+
     return [item.destination, item.location, item.description].some((value) =>
       String(value || "")
         .toLowerCase()
-        .includes(query),
+        .includes(query)
     );
   });
 
@@ -793,9 +801,13 @@ function ViewDestination() {
       }}
     >
       <div className="flex justify-between mb-3 rounded-xl bg-white p-3 shadow-sm">
-        <h2 className="text-2xl font-semibold" style={{ color: "#003705" }}>
+        <h2
+          className="text-2xl font-semibold"
+          style={{ color: "#003705" }}
+        >
           Add Destination
         </h2>
+
         <div className="flex gap-3">
           <Search
             placeholder="Search destinations"
@@ -804,6 +816,7 @@ function ViewDestination() {
             onChange={(e) => setSearchText(e.target.value)}
             style={{ marginBottom: 10, maxWidth: 320 }}
           />
+
           <AddDestination
             editDestination={editDestination}
             onUpdateComplete={handleUpdateComplete}
@@ -815,8 +828,23 @@ function ViewDestination() {
       <Table
         columns={columns}
         dataSource={filteredItems}
-        pagination={{ pageSize: 10   }}
+        pagination={{ pageSize: 10 }}
       />
+
+      {/* Delete Modal */}
+      <Modal
+        title="Delete Destination"
+        open={isModalOpen}
+        onCancel={handleCancel}
+        okText="Delete"
+        okButtonProps={{ danger: true }}
+        onOk={handleDelete}
+      >
+        <p>
+          Are you sure you want to delete{" "}
+          <strong>{selectedDestination?.destination}</strong>?
+        </p>
+      </Modal>
     </ConfigProvider>
   );
 }
@@ -829,6 +857,7 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
   const [loading, setLoading] = useState(false);
   const [destinations, setDestinations] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
+  const [packageImage, setPackageImage] = useState(null);
 
   const getDestinationIds = (value) => {
     const items = Array.isArray(value) ? value : value ? [value] : [];
@@ -849,6 +878,7 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
   const clearForm = () => {
     form.resetFields();
     setIsEditing(false);
+    setPackageImage(null);
   };
 
   const showModal = async () => {
@@ -878,6 +908,7 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
         min_booking_advance_days: editPackage.min_booking_advance_days || 0,
         destination: getDestinationIds(editPackage.destination),
       });
+      setPackageImage(null);
       fetchDestinations();
     }
   }, [editPackage, form]);
@@ -890,19 +921,43 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
         : values.destination
           ? [values.destination]
           : [];
-      const payload = {
-        ...values,
-        destination:
-          isEditing && destinationIds.length === 0
-            ? getDestinationIds(editPackage?.destination)
-            : destinationIds,
-      };
+      const normalizedDestinations =
+        isEditing && destinationIds.length === 0
+          ? getDestinationIds(editPackage?.destination)
+          : destinationIds;
+
+      if (!isEditing && !(packageImage instanceof File)) {
+        messageApi.error("Please upload a package image before saving.");
+        return;
+      }
+
+      const payload = new FormData();
+      payload.append("packageName", values.packageName);
+      payload.append("type", values.type);
+      payload.append("description", values.description);
+      payload.append("duration_days", values.duration_days);
+      payload.append("difficulty_level", values.difficulty_level);
+      payload.append("price", values.price);
+      payload.append("max_capacity", values.max_capacity);
+      payload.append("min_booking_advance_days", values.min_booking_advance_days ?? 0);
+
+      normalizedDestinations.forEach((destinationId) => {
+        payload.append("destination", destinationId);
+      });
+
+      if (packageImage instanceof File) {
+        payload.append("packageImage", packageImage, packageImage.name);
+      }
 
       if (isEditing) {
-        await axios.put(`http://localhost:5000/api/packages/${editPackage._id}`, payload);
+        await axios.put(`http://localhost:5000/api/packages/${editPackage._id}`, payload, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
         messageApi.success("Package updated successfully.");
       } else {
-        await axios.post("http://localhost:5000/api/packages/createPackage", payload);
+        await axios.post("http://localhost:5000/api/packages/createPackage", payload, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
         messageApi.success("Package added successfully.");
       }
 
@@ -993,7 +1048,7 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
                 name="duration_days"
                 rules={[{ required: true, message: "Please enter the duration." }]}
               >
-                <Input placeholder="e.g. 3 Days / 2 Nights" />
+                <InputNumber min={0} style={{ width: "100%" }} />
               </Form.Item>
 
               <Form.Item
@@ -1030,6 +1085,13 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
                 rules={[{ required: true, message: "Please enter the advance days." }]}
               >
                 <InputNumber min={0} style={{ width: "100%" }} />
+              </Form.Item>
+              <Form.Item
+                label="Package Image"
+                name="packageImage"
+                rules={[{ required: !isEditing, message: "Please upload an image." }]}
+              >
+                <Input type="file" accept="image/*" onChange={(e) => setPackageImage(e.target.files?.[0] || null)} />
               </Form.Item>
             </div>
           </div>

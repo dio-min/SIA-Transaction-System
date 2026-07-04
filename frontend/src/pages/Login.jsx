@@ -1,11 +1,34 @@
 import { Form, Input, Button, Checkbox, message } from "antd";
 import axios from "axios";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function Login() {
   const navigate = useNavigate();
   const [form] = Form.useForm();
+  const [heroImage, setHeroImage] = useState("");
+  
+  useEffect(() => {
+    const fetchHero = async () => {
+      try {
+        const res = await axios.get(
+          "http://localhost:5000/api/destinations/getDestination"
+        );
+  
+        const firstImage = res.data.find(
+          (d) => d.imageUrl || d.destinationImage
+        );
+  
+        if (firstImage) {
+          setHeroImage(firstImage.imageUrl || firstImage.destinationImage);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+  
+    fetchHero();
+  }, []);
 
   useEffect(() => {
     const savedLogin = localStorage.getItem("rememberedLogin");
@@ -51,12 +74,18 @@ function Login() {
       }
 
       const userRole = res.data?.user?.role;
+      const loggedInUser = res.data?.user;
+
+      if (loggedInUser) {
+        localStorage.setItem("currentUser", JSON.stringify(loggedInUser));
+      }
+
       message.success("Login successful!");
 
       if (userRole === "admin") {
         navigate("/admin");
       } else {
-        navigate("/traveler");
+        navigate("/travelers");
       }
     } catch (err) {
       message.error("Invalid username or password.");
@@ -134,14 +163,40 @@ function Login() {
       </div>
 
       {/* Right Side */}
-      <div className="hidden flex-1 items-center justify-center bg-[#005707] text-white md:flex">
-        <div className="text-center">
-          <h2 className="mb-4 text-4xl font-bold">Welcome Back</h2>
-          <p className="text-lg text-gray-300">
-            Sign in to access your dashboard.
-          </p>
-        </div>
-      </div>
+      {/* Right Side */}
+<div
+  className="relative hidden flex-1 items-center justify-center overflow-hidden md:flex"
+  style={{
+    backgroundImage:
+      `url(${heroImage})`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+  }}
+>
+  {/* Green Gradient Overlay */}
+  <div
+    className="absolute inset-0"
+    style={{
+      background:
+        "linear-gradient(90deg, rgba(0,87,7,.88) 0%, rgba(0,87,7,.65) 45%, rgba(0,87,7,.30) 80%, rgba(0,87,7,.15) 100%)",
+    }}
+  />
+
+  {/* Optional Dark Overlay */}
+  <div className="absolute inset-0 bg-black/20" />
+
+  {/* Content */}
+  <div className="relative z-10 max-w-lg px-10 text-center text-white">
+    <h2 className="mb-4 text-5xl font-bold">
+      Welcome Back
+    </h2>
+
+    <p className="text-lg leading-8 text-gray-100">
+      Discover Nueva Vizcaya's breathtaking destinations, book unforgettable
+      adventures, and manage your trips with ease.
+    </p>
+  </div>
+</div>
     </div>
   );
 }
