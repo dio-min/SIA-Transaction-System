@@ -2,6 +2,7 @@ import { Form, Input, Button, Checkbox, message } from "antd";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../api";
 
 function Login() {
   const navigate = useNavigate();
@@ -12,7 +13,7 @@ function Login() {
     const fetchHero = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:5000/api/destinations/getDestination"
+          `${API_BASE_URL}/api/destinations/getDestination`
         );
   
         const firstImage = res.data.find(
@@ -54,7 +55,7 @@ function Login() {
   const onFinish = async (values) => {
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/users/login",
+        `${API_BASE_URL}/api/users/login`,
         {
           username: values.username,
           password: values.password,

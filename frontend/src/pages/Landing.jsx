@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Signup from "./Signup";
+import { API_BASE_URL } from "../api";
 const { Header, Footer, Content } = Layout;
 const { Meta } = Card;
 
@@ -61,7 +62,7 @@ function Destinations() {
       setLoading(true);
       try {
         const res = await axios.get(
-          "http://localhost:5000/api/destinations/getDestination",
+          `${API_BASE_URL}/api/destinations/getDestination`,
         );
         if (!cancelled) setDestinations(res.data || []);
       } catch (err) {
@@ -135,7 +136,7 @@ useEffect(() => {
   const fetchHero = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/api/destinations/getDestination"
+          `${API_BASE_URL}/api/destinations/getDestination`
       );
 
       const firstImage = res.data.find(

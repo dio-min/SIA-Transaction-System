@@ -17,6 +17,7 @@ import {
 import { LoadingOutlined, PlusOutlined } from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../../api";
 
 const { Header, Content, Footer, Sider } = Layout;
 import axios from "axios";
@@ -216,7 +217,7 @@ function CreateAdminUser({ onCreated }) {
   const handleSubmit = async (values) => {
     setLoading(true);
     try {
-      await axios.post("http://localhost:5000/api/users/register", {
+      await axios.post(`${API_BASE_URL}/api/users/register`, {
         username: values.username,
         email: values.email,
         password: values.password,
@@ -418,7 +419,7 @@ function AddDestination({ editDestination, onUpdateComplete, onClose }) {
         formData.append("location", values.location ?? location);
         formData.append("description", values.description ?? description);
         await axios.put(
-          "http://localhost:5000/api/destinations/updateDestination",
+          `${API_BASE_URL}/api/destinations/updateDestination`,
           formData,
           {
             headers: { "Content-Type": "multipart/form-data" },
@@ -433,7 +434,7 @@ function AddDestination({ editDestination, onUpdateComplete, onClose }) {
         formData.append("location", values.location ?? location);
         formData.append("description", values.description ?? description);
         await axios.post(
-          "http://localhost:5000/api/destinations/createDestination",
+          `${API_BASE_URL}/api/destinations/createDestination`,
           formData,
         );
         messageApi.success({
@@ -697,7 +698,7 @@ function ViewDestination() {
   const fetchData = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/api/destinations/getDestination",
+        `${API_BASE_URL}/api/destinations/getDestination`,
       );
 
       setItems(
@@ -734,7 +735,7 @@ function ViewDestination() {
 
     try {
       await axios.delete(
-        `http://localhost:5000/api/destinations/${selectedDestination._id}`,
+        `${API_BASE_URL}/api/destinations/${selectedDestination._id}`,
       );
 
       message.success("Destination deleted successfully!");
@@ -907,7 +908,7 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
   const fetchDestinations = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/api/destinations/getDestination",
+        `${API_BASE_URL}/api/destinations/getDestination`,
       );
       setDestinations(res.data || []);
     } catch (error) {
@@ -995,7 +996,7 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
 
       if (isEditing) {
         await axios.put(
-          `http://localhost:5000/api/packages/${editPackage._id}`,
+          `${API_BASE_URL}/api/packages/${editPackage._id}`,
           payload,
           {
             headers: { "Content-Type": "multipart/form-data" },
@@ -1004,7 +1005,7 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
         messageApi.success("Package updated successfully.");
       } else {
         await axios.post(
-          "http://localhost:5000/api/packages/createPackage",
+          `${API_BASE_URL}/api/packages/createPackage`,
           payload,
           {
             headers: { "Content-Type": "multipart/form-data" },
@@ -1222,7 +1223,7 @@ function ViewPackages() {
   const fetchData = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/api/packages/getAllPackages",
+        `${API_BASE_URL}/api/packages/getAllPackages`,
       );
       setItems(
         (res.data || []).map((item) => ({
@@ -1241,7 +1242,7 @@ function ViewPackages() {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/packages/${id}`);
+      await axios.delete(`${API_BASE_URL}/api/packages/${id}`);
       setRefreshKey((prev) => prev + 1);
       message.success("Package deleted successfully.");
     } catch (error) {
@@ -1383,7 +1384,7 @@ function ViewBookings() {
     const fetchBookings = async () => {
       setLoading(true);
       try {
-        const res = await axios.get("http://localhost:5000/api/bookings");
+        const res = await axios.get(`${API_BASE_URL}/api/bookings`);
         setBookings(res.data || []);
       } catch (error) {
         console.error("Error fetching bookings:", error);
@@ -1478,7 +1479,7 @@ function ViewTransactions() {
     const fetchTransactions = async () => {
       setLoading(true);
       try {
-        const res = await axios.get("http://localhost:5000/api/transactions/getTransactions");
+        const res = await axios.get(`${API_BASE_URL}/api/transactions/getTransactions`);
         setTransactions(res.data || []);
       } catch (error) {
         console.error("Error fetching transactions:", error);
@@ -1570,7 +1571,7 @@ function ViewAdminUsers({ refreshKey }) {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://localhost:5000/api/users?role=admin");
+      const res = await axios.get(`${API_BASE_URL}/api/users?role=admin`);
       setUsers(res.data || []);
     } catch (error) {
       console.error("Error fetching admin users:", error);
@@ -1586,7 +1587,7 @@ function ViewAdminUsers({ refreshKey }) {
 
   const handleDelete = async (id, username) => {
     try {
-      await axios.delete(`http://localhost:5000/api/users/${id}`);
+      await axios.delete(`${API_BASE_URL}/api/users/${id}`);
       message.success(`${username} deleted successfully.`);
       fetchUsers();
     } catch (error) {

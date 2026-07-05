@@ -32,6 +32,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import dayjs from "dayjs";
+import { API_BASE_URL } from "../../api";
 const { Header, Footer, Content } = Layout;
 const { Meta } = Card;
 const { Search } = Input;
@@ -372,7 +373,7 @@ useEffect(() => {
   const fetchHero = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/api/destinations/getDestination"
+          `${API_BASE_URL}/api/destinations/getDestination`
       );
 
       const firstImage = res.data.find(
@@ -528,8 +529,8 @@ function Traveler() {
 
       try {
         const [destRes, pkgRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/destinations/getDestination"),
-          axios.get("http://localhost:5000/api/packages/getAllPackages"),
+          axios.get(`${API_BASE_URL}/api/destinations/getDestination`),
+          axios.get(`${API_BASE_URL}/api/packages/getAllPackages`),
         ]);
 
         setDestinations(
@@ -561,7 +562,7 @@ function Traveler() {
     setBookingsLoading(true);
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/bookings/user/${currentUser._id}`,
+        `${API_BASE_URL}/api/bookings/user/${currentUser._id}`,
       );
       setMyBookings(res.data || []);
     } catch (err) {
@@ -648,7 +649,7 @@ function Traveler() {
       };
 
       await axios.post(
-        "http://localhost:5000/api/transactions/createTransaction",
+        `${API_BASE_URL}/api/transactions/createTransaction`,
         transactionData,
       );
 
@@ -840,7 +841,7 @@ function Traveler() {
                     };
 
                     const res = await axios.post(
-                      "http://localhost:5000/api/bookings/create",
+                      `${API_BASE_URL}/api/bookings/create`,
                       bookingData,
                     );
 
