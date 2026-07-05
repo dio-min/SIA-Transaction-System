@@ -17,6 +17,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.get('/', (req, res) => {
+  res.json({ message: 'pakshet' });
+});
+
 app.use('/api/destinations', destinationRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/packages', packageRoutes);
