@@ -1,6 +1,9 @@
 const mongoose = require('mongoose');
 const Package = require('../models/packages');
 const Destination = require('../models/destination');
+const Booking = require('../models/booking');
+const Transaction = require('../models/transaction');
+
 const asyncHandler = require('express-async-handler');
 
 const normalizeDestinationIds = (destination) => {
@@ -173,6 +176,23 @@ const updatePackage = asyncHandler(async (req, res) => {
     new: true,
     runValidators: true,
   }).populate('destination', 'destination location');
+
+  if (updateData.packageName) {
+    await Booking.updateMany(
+      { packageId: id },
+      { packageName: updatedPackage.packageName },
+    );
+
+    const relatedBookings = await Booking.find({ packageId: id }).select('_id');
+    const bookingIds = relatedBookings.map((booking) => booking._id);
+
+    if (bookingIds.length > 0) {
+      await Transaction.updateMany(
+        { bookingId: { $in: bookingIds } },
+        { packageName: updatedPackage.packageName },
+      );
+    }
+  }
 
   res.status(200).json(updatedPackage);
 });

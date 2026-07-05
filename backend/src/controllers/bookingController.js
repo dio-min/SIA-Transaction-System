@@ -32,6 +32,7 @@ const createBooking = asyncHandler(async (req, res) => {
 
   const booking = await Booking.create({
     userId,
+    userName: user.username,
     packageId,
     packageName: packageName || packageItem.packageName,
     travelDate,
@@ -52,14 +53,17 @@ const getBookingsByUser = asyncHandler(async (req, res) => {
   res.status(200).json(bookings);
 });
 
-const getBookingById = asyncHandler(async (req, res) => {
-  const { id } = req.params;
+const getAllBookings = asyncHandler(async (req, res) => {
+  const bookings = await Booking.find().sort({ createdAt: -1 });
+  res.status(200).json(bookings);
+});
 
-  const booking = await Booking.findById(id);
+
+const getBooking = asyncHandler(async (req, res) => {
+const booking = await Booking.findById(req.params.id);
   if (!booking) {
     return res.status(404).json({ message: 'Booking not found.' });
   }
-
   res.status(200).json(booking);
 });
 
@@ -68,6 +72,7 @@ const getBookingById = asyncHandler(async (req, res) => {
 module.exports = {
   createBooking,
   getBookingsByUser,
-  getBookingById,
-  
+  getAllBookings,
+  getBooking,
+
 };

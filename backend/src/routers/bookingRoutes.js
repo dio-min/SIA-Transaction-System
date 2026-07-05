@@ -4,15 +4,15 @@ const router = express.Router();
 const {
   createBooking,
   getBookingsByUser,
-  getBookingById,
-  cancelBooking,
-  rescheduleBooking,
-  updatePayment,
+  getAllBookings,
+  getBooking,
 } = require('../controllers/bookingController');
 
 router.post('/create', createBooking);
+router.get('/', getAllBookings);
 router.get('/user/:userId', getBookingsByUser);
-router.get('/:id', getBookingById);
+router.get('/getBooking/:id', getBooking);
+
 
 
 module.exports = router;

@@ -7,10 +7,18 @@ const transactionSchema = new mongoose.Schema({
         ref: 'User',
         required: true,
     },
+    userName: {
+        type: String,
+        required: true,
+    },
    
     bookingId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Booking',
+        required: true,
+    },
+    packageName: {
+        type: String,
         required: true,
     },
     amount: {

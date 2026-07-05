@@ -57,6 +57,30 @@ const getUserById = asyncHandler(async (req, res) => {
   res.status(200).json(user);
 });
 
+const getAllUsers = asyncHandler(async (req, res) => {
+  const { role } = req.query;
+
+  const filter = {};
+  if (role) {
+    filter.role = role;
+  }
+
+  const users = await User.find(filter).select('-password').sort({ createdAt: -1 });
+  res.status(200).json(users);
+});
+
+const deleteUser = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const user = await User.findById(id);
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+
+  await user.deleteOne();
+  res.status(200).json({ message: 'User deleted successfully' });
+});
+
 const updateUserProfile = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { username, email } = req.body;
@@ -81,4 +105,4 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 
 
 
-module.exports = { registerUser, loginUser, getUserById, updateUserProfile };
+module.exports = { registerUser, loginUser, getUserById, getAllUsers, deleteUser, updateUserProfile };

@@ -23,21 +23,32 @@ const createTransaction = asyncHandler(async (req, res) => {
 
     const transaction = await Transaction.create({
         userId,
+        userName: user.username,
         bookingId,
         amount,
         paymentMethod,
+        packageName: booking.packageName,
+    
 
         
     });
 
     // Update the booking's payment status to 'Completed'
    booking.paymentStatus = 'Paid';
+   booking.status = 'Confirmed';
     await booking.save();
 
     res.status(201).json(transaction);
 });
 
 
+const getTransactions= asyncHandler(async (req, res) => {
+    const transactions = await Transaction.find().sort({ createdAt: -1 });
+    res.status(200).json(transactions);
+});
+
+
 module.exports = {
     createTransaction,
+    getTransactions,
 };

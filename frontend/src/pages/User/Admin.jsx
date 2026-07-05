@@ -12,6 +12,7 @@ import {
   Space,
   ConfigProvider,
   Select,
+  Tag,
 } from "antd";
 import { LoadingOutlined, PlusOutlined } from "@ant-design/icons";
 import { useState, useEffect } from "react";
@@ -33,6 +34,7 @@ function Admin() {
   const [selectedMenu, setSelectedMenu] = useState(() => {
     return localStorage.getItem("adminSelectedMenu") || "1";
   });
+  const [adminUsersRefreshKey, setAdminUsersRefreshKey] = useState(0);
 
   useEffect(() => {
     localStorage.setItem("adminSelectedMenu", selectedMenu);
@@ -59,8 +61,21 @@ function Admin() {
 
     if (selectedMenu === "4") {
       return (
+        <ViewAdminUsers refreshKey={adminUsersRefreshKey} />
+      );
+    }
+    if (selectedMenu === "5") {
+      return (
         <div className="rounded-xl bg-white p-8 shadow-sm">
-          <CreateAdminUser />
+          <ViewBookings />
+        </div>
+      );
+    }
+
+    if (selectedMenu === "6") {
+      return (
+        <div className="rounded-xl bg-white p-8 shadow-sm">
+          <ViewTransactions />
         </div>
       );
     }
@@ -116,7 +131,7 @@ function Admin() {
 
 function Navbar({ selectedKey, onSelect }) {
   const navigate = useNavigate();
-   
+
   const handleSignOut = () => {
     localStorage.removeItem("rememberedLogin");
     localStorage.removeItem("adminSelectedMenu");
@@ -140,6 +155,14 @@ function Navbar({ selectedKey, onSelect }) {
     {
       key: "4",
       label: "Users",
+    },
+    {
+      key: "5",
+      label: "Bookings",
+    },
+    {
+      key: "6",
+      label: "Transactions",
     },
   ];
 
@@ -175,9 +198,20 @@ function Navbar({ selectedKey, onSelect }) {
   );
 }
 
-function CreateAdminUser() {
+function CreateAdminUser({ onCreated }) {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleOpen = () => {
+    form.resetFields();
+    setIsModalOpen(true);
+  };
+
+  const handleCancel = () => {
+    setIsModalOpen(false);
+    form.resetFields();
+  };
 
   const handleSubmit = async (values) => {
     setLoading(true);
@@ -191,8 +225,13 @@ function CreateAdminUser() {
 
       message.success("Admin user created successfully.");
       form.resetFields();
+      setIsModalOpen(false);
+      onCreated?.();
     } catch (error) {
-      console.error("Create admin error:", error.response?.data ?? error.message);
+      console.error(
+        "Create admin error:",
+        error.response?.data ?? error.message,
+      );
       message.error("Unable to create admin user. Please try again.");
     } finally {
       setLoading(false);
@@ -201,79 +240,88 @@ function CreateAdminUser() {
 
   return (
     <div>
+      <div className="flex items-center justify-between gap-4">
+        
+       
 
+        <Button
+          type="primary"
+          onClick={handleOpen}
+          style={{ backgroundColor: "#005707", border: "none" }}
+        >
+          Create Admin User
+        </Button>
+      </div>
 
-      <h2 className="text-2xl font-semibold" style={{ color: "#003705" }}>
-        Create Admin User
-      </h2>
-      <p className="mt-2 text-gray-600">
-        Add a new administrator account for the system.
-      </p>
-
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleSubmit}
-        className="mt-6 max-w-xl"
+      <Modal
+        title="Create Admin User"
+        open={isModalOpen}
+        onCancel={handleCancel}
+        footer={null}
+        destroyOnClose
       >
-        <Form.Item
-          label="Username"
-          name="username"
-          rules={[{ required: true, message: "Please enter a username." }]}
-        >
-          <Input size="large" placeholder="Enter username" />
-        </Form.Item>
-
-        <Form.Item
-          label="Email"
-          name="email"
-          rules={[
-            { required: true, message: "Please enter an email." },
-            { type: "email", message: "Please enter a valid email." },
-          ]}
-        >
-          <Input size="large" placeholder="Enter email" />
-        </Form.Item>
-
-        <Form.Item
-          label="Password"
-          name="password"
-          rules={[{ required: true, message: "Please enter a password." }]}
-        >
-          <Input.Password size="large" placeholder="Enter password" />
-        </Form.Item>
-
-        <Form.Item
-          label="Confirm Password"
-          name="confirmPassword"
-          dependencies={["password"]}
-          rules={[
-            { required: true, message: "Please confirm your password." },
-            ({ getFieldValue }) => ({
-              validator(_, value) {
-                if (!value || getFieldValue("password") === value) {
-                  return Promise.resolve();
-                }
-                return Promise.reject(new Error("Passwords do not match."));
-              },
-            }),
-          ]}
-        >
-          <Input.Password size="large" placeholder="Confirm password" />
-        </Form.Item>
-
-        <Form.Item>
-          <Button
-            type="primary"
-            htmlType="submit"
-            loading={loading}
-            size="large"
-            style={{ backgroundColor: "#005707", border: "none" }}
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
+          <Form.Item
+            label="Username"
+            name="username"
+            rules={[{ required: true, message: "Please enter a username." }]}
           >
-            {loading ? "Creating..." : "Create Admin"}
-          </Button>
-        </Form.Item>
-      </Form>
+            <Input size="large" placeholder="Enter username" />
+          </Form.Item>
+
+          <Form.Item
+            label="Email"
+            name="email"
+            rules={[
+              { required: true, message: "Please enter an email." },
+              { type: "email", message: "Please enter a valid email." },
+            ]}
+          >
+            <Input size="large" placeholder="Enter email" />
+          </Form.Item>
+
+          <Form.Item
+            label="Password"
+            name="password"
+            rules={[{ required: true, message: "Please enter a password." }]}
+          >
+            <Input.Password size="large" placeholder="Enter password" />
+          </Form.Item>
+
+          <Form.Item
+            label="Confirm Password"
+            name="confirmPassword"
+            dependencies={["password"]}
+            rules={[
+              { required: true, message: "Please confirm your password." },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue("password") === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error("Passwords do not match."));
+                },
+              }),
+            ]}
+          >
+            <Input.Password size="large" placeholder="Confirm password" />
+          </Form.Item>
+
+          <Form.Item className="mb-0">
+            <div className="flex justify-end gap-3">
+              <Button onClick={handleCancel}>Cancel</Button>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                style={{ backgroundColor: "#005707", border: "none" }}
+              >
+                {loading ? "Creating..." : "Create Admin"}
+              </Button>
+            </div>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }
@@ -506,7 +554,6 @@ function AddDestination({ editDestination, onUpdateComplete, onClose }) {
                   </Form.Item>
                 </>
               )}
-              
 
               <Form.Item
                 label="Description"
@@ -650,14 +697,14 @@ function ViewDestination() {
   const fetchData = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/api/destinations/getDestination"
+        "http://localhost:5000/api/destinations/getDestination",
       );
 
       setItems(
         res.data.map((item) => ({
           ...item,
           key: item._id,
-        }))
+        })),
       );
     } catch (error) {
       console.error("Error fetching destinations:", error);
@@ -687,14 +734,14 @@ function ViewDestination() {
 
     try {
       await axios.delete(
-        `http://localhost:5000/api/destinations/${selectedDestination._id}`
+        `http://localhost:5000/api/destinations/${selectedDestination._id}`,
       );
 
       message.success("Destination deleted successfully!");
 
       // Remove from UI immediately
       setItems((prev) =>
-        prev.filter((item) => item._id !== selectedDestination._id)
+        prev.filter((item) => item._id !== selectedDestination._id),
       );
 
       handleCancel();
@@ -764,11 +811,7 @@ function ViewDestination() {
             Update
           </Button>
 
-          <Button
-            danger
-            type="primary"
-            onClick={() => showModal(record)}
-          >
+          <Button danger type="primary" onClick={() => showModal(record)}>
             Delete
           </Button>
         </Space>
@@ -782,7 +825,7 @@ function ViewDestination() {
     return [item.destination, item.location, item.description].some((value) =>
       String(value || "")
         .toLowerCase()
-        .includes(query)
+        .includes(query),
     );
   });
 
@@ -801,10 +844,7 @@ function ViewDestination() {
       }}
     >
       <div className="flex justify-between mb-3 rounded-xl bg-white p-3 shadow-sm">
-        <h2
-          className="text-2xl font-semibold"
-          style={{ color: "#003705" }}
-        >
+        <h2 className="text-2xl font-semibold" style={{ color: "#003705" }}>
           Add Destination
         </h2>
 
@@ -849,7 +889,6 @@ function ViewDestination() {
   );
 }
 
-
 function AddPackage({ editPackage, onUpdateComplete, onClose }) {
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
@@ -867,7 +906,9 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
 
   const fetchDestinations = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/destinations/getDestination");
+      const res = await axios.get(
+        "http://localhost:5000/api/destinations/getDestination",
+      );
       setDestinations(res.data || []);
     } catch (error) {
       console.error("Error fetching destinations:", error);
@@ -939,7 +980,10 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
       payload.append("difficulty_level", values.difficulty_level);
       payload.append("price", values.price);
       payload.append("max_capacity", values.max_capacity);
-      payload.append("min_booking_advance_days", values.min_booking_advance_days ?? 0);
+      payload.append(
+        "min_booking_advance_days",
+        values.min_booking_advance_days ?? 0,
+      );
 
       normalizedDestinations.forEach((destinationId) => {
         payload.append("destination", destinationId);
@@ -950,14 +994,22 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
       }
 
       if (isEditing) {
-        await axios.put(`http://localhost:5000/api/packages/${editPackage._id}`, payload, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await axios.put(
+          `http://localhost:5000/api/packages/${editPackage._id}`,
+          payload,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          },
+        );
         messageApi.success("Package updated successfully.");
       } else {
-        await axios.post("http://localhost:5000/api/packages/createPackage", payload, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await axios.post(
+          "http://localhost:5000/api/packages/createPackage",
+          payload,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          },
+        );
         messageApi.success("Package added successfully.");
       }
 
@@ -965,7 +1017,10 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
       clearForm();
       if (onUpdateComplete) onUpdateComplete();
     } catch (error) {
-      console.error("Package save error:", error.response?.data ?? error.message);
+      console.error(
+        "Package save error:",
+        error.response?.data ?? error.message,
+      );
       messageApi.error("Unable to save package. Please try again.");
     } finally {
       setLoading(false);
@@ -998,7 +1053,9 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
               <Form.Item
                 label="Package Name"
                 name="packageName"
-                rules={[{ required: true, message: "Please enter a package name." }]}
+                rules={[
+                  { required: true, message: "Please enter a package name." },
+                ]}
               >
                 <Input placeholder="e.g. Adventure Escape" />
               </Form.Item>
@@ -1006,7 +1063,9 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
               <Form.Item
                 label="Type"
                 name="type"
-                rules={[{ required: true, message: "Please enter the package type." }]}
+                rules={[
+                  { required: true, message: "Please enter the package type." },
+                ]}
               >
                 <Input placeholder="e.g. Adventure" />
               </Form.Item>
@@ -1014,7 +1073,9 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
               <Form.Item
                 label="Description"
                 name="description"
-                rules={[{ required: true, message: "Please enter a description." }]}
+                rules={[
+                  { required: true, message: "Please enter a description." },
+                ]}
               >
                 <TextArea rows={5} placeholder="Describe the package..." />
               </Form.Item>
@@ -1027,7 +1088,9 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
                     validator: (_, value) =>
                       Array.isArray(value) && value.length >= 1
                         ? Promise.resolve()
-                        : Promise.reject(new Error("Please select at least 1 destination.")),
+                        : Promise.reject(
+                            new Error("Please select at least 1 destination."),
+                          ),
                   },
                 ]}
               >
@@ -1046,7 +1109,9 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
               <Form.Item
                 label="Duration (days)"
                 name="duration_days"
-                rules={[{ required: true, message: "Please enter the duration." }]}
+                rules={[
+                  { required: true, message: "Please enter the duration." },
+                ]}
               >
                 <InputNumber min={0} style={{ width: "100%" }} />
               </Form.Item>
@@ -1054,7 +1119,12 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
               <Form.Item
                 label="Difficulty"
                 name="difficulty_level"
-                rules={[{ required: true, message: "Please enter the difficulty level." }]}
+                rules={[
+                  {
+                    required: true,
+                    message: "Please enter the difficulty level.",
+                  },
+                ]}
               >
                 <Select placeholder="Select difficulty level">
                   <Select.Option value="Easy">Easy</Select.Option>
@@ -1074,7 +1144,9 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
               <Form.Item
                 label="Max Capacity"
                 name="max_capacity"
-                rules={[{ required: true, message: "Please enter max capacity." }]}
+                rules={[
+                  { required: true, message: "Please enter max capacity." },
+                ]}
               >
                 <InputNumber min={1} style={{ width: "100%" }} />
               </Form.Item>
@@ -1082,16 +1154,24 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
               <Form.Item
                 label="Minimum Booking Advance (days)"
                 name="min_booking_advance_days"
-                rules={[{ required: true, message: "Please enter the advance days." }]}
+                rules={[
+                  { required: true, message: "Please enter the advance days." },
+                ]}
               >
                 <InputNumber min={0} style={{ width: "100%" }} />
               </Form.Item>
               <Form.Item
                 label="Package Image"
                 name="packageImage"
-                rules={[{ required: !isEditing, message: "Please upload an image." }]}
+                rules={[
+                  { required: !isEditing, message: "Please upload an image." },
+                ]}
               >
-                <Input type="file" accept="image/*" onChange={(e) => setPackageImage(e.target.files?.[0] || null)} />
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setPackageImage(e.target.files?.[0] || null)}
+                />
               </Form.Item>
             </div>
           </div>
@@ -1105,7 +1185,11 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
                 loading={loading}
                 style={{ backgroundColor: "#005707", border: "none" }}
               >
-                {loading ? "Saving..." : isEditing ? "Update Package" : "Save Package"}
+                {loading
+                  ? "Saving..."
+                  : isEditing
+                    ? "Update Package"
+                    : "Save Package"}
               </Button>
             </div>
           </Form.Item>
@@ -1122,7 +1206,11 @@ function ViewPackages() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const getDestinationLabel = (destination) => {
-    const destinationList = Array.isArray(destination) ? destination : destination ? [destination] : [];
+    const destinationList = Array.isArray(destination)
+      ? destination
+      : destination
+        ? [destination]
+        : [];
 
     const labels = destinationList
       .map((item) => item?.destination || item?.location || "")
@@ -1133,7 +1221,9 @@ function ViewPackages() {
 
   const fetchData = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/packages/getAllPackages");
+      const res = await axios.get(
+        "http://localhost:5000/api/packages/getAllPackages",
+      );
       setItems(
         (res.data || []).map((item) => ({
           ...item,
@@ -1230,8 +1320,14 @@ function ViewPackages() {
 
   const filteredItems = items.filter((item) => {
     const query = searchText.toLowerCase();
-    return [item.packageName, item.type, getDestinationLabel(item.destination)].some((value) =>
-      String(value || "").toLowerCase().includes(query),
+    return [
+      item.packageName,
+      item.type,
+      getDestinationLabel(item.destination),
+    ].some((value) =>
+      String(value || "")
+        .toLowerCase()
+        .includes(query),
     );
   });
 
@@ -1254,7 +1350,7 @@ function ViewPackages() {
           Manage Packages
         </h2>
         <div className="flex gap-3">
-          <Input
+          <Search
             placeholder="Search packages"
             allowClear
             value={searchText}
@@ -1269,8 +1365,321 @@ function ViewPackages() {
         </div>
       </div>
 
-      <Table columns={columns} dataSource={filteredItems} pagination={{ pageSize: 4 }} />
+      <Table
+        columns={columns}
+        dataSource={filteredItems}
+        pagination={{ pageSize: 4 }}
+      />
     </ConfigProvider>
+  );
+}
+
+function ViewBookings() {
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchText, setSearchText] = useState("");
+
+  useEffect(() => {
+    const fetchBookings = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get("http://localhost:5000/api/bookings");
+        setBookings(res.data || []);
+      } catch (error) {
+        console.error("Error fetching bookings:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookings();
+  }, []);
+  const bookingColumns = [
+    {
+      title: "Booking ID",
+      dataIndex: "_id",
+      key: "_id",
+    },
+    {
+      title: "Traveler",
+      dataIndex: "fullName",
+      key: "fullName",
+    },
+    {
+      title: "Package",
+      dataIndex: "packageName",
+      key: "packageName",
+    },
+    {
+      title: "Travel Date",
+      dataIndex: "travelDate",
+      key: "travelDate",
+    },
+    {
+      title: "Booked On",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      render: (date) => (date ? new Date(date).toLocaleDateString() : "N/A"),
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (status) => {
+        let color = "default";
+        if (status === "Confirmed") color = "green";
+        else if (status === "Pending") color = "orange";
+        else if (status === "Cancelled") color = "red";
+        return <Tag color={color}>{status}</Tag>;
+      },
+    },
+  ];
+  const filteredBookings = bookings.filter((booking) => {
+    const query = searchText.toLowerCase();
+    return (
+      booking.fullName.toLowerCase().includes(query) ||
+      booking.packageName.toLowerCase().includes(query) ||
+      booking.status.toLowerCase().includes(query)
+    );
+  });
+
+  return (
+    <div className="bg-white p-6 rounded-xl shadow-sm">
+      <div className="mb-4 flex justify-between items-center">
+        <h2 className="text-2xl font-semibold mb-4" style={{ color: "#003705" }}>
+        View Bookings
+      </h2>
+      <Search
+        placeholder="Search destinations"
+        allowClear
+        value={searchText}
+        onChange={(e) => setSearchText(e.target.value)}
+        style={{ marginBottom: 10, maxWidth: 320 }}
+      />
+      </div>
+      
+      <Table
+        rowKey="_id"
+        columns={bookingColumns}
+        dataSource={filteredBookings}
+        loading={loading}
+      />
+    </div>
+  );
+}
+
+function ViewTransactions() {
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchText, setSearchText] = useState("");
+
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get("http://localhost:5000/api/transactions/getTransactions");
+        setTransactions(res.data || []);
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTransactions();
+  }, []);
+
+  const transactionColumns = [
+    {
+      title: "Transaction ID",
+      dataIndex: "_id",
+      key: "_id",
+    },
+    {
+      title: "User",
+      dataIndex: "userName",
+      key: "userName",
+    },
+    {
+      title: "Package",
+      dataIndex: "packageName",
+      key: "packageName",
+    },
+    {
+      title: "Amount",
+      dataIndex: "amount",
+      key: "amount",
+      render: (amount) => `₱${Number(amount || 0).toLocaleString()}`,
+    },
+    {
+      title: "Payment Method",
+      dataIndex: "paymentMethod",
+      key: "paymentMethod",
+    },
+    {
+      title: "Transaction Date",
+      dataIndex: "transactionDate",
+      key: "transactionDate",
+      render: (date) => (date ? new Date(date).toLocaleDateString() : "N/A"),
+    },
+    
+  ];
+  const filteredTransactions = transactions.filter((transaction) => {
+    const query = searchText.toLowerCase();
+    const bookingId = String(transaction.bookingId || "");
+    return (
+      String(transaction._id || "").toLowerCase().includes(query) ||
+      bookingId.toLowerCase().includes(query) ||
+      String(transaction.userName || "").toLowerCase().includes(query) ||
+      String(transaction.packageName || "").toLowerCase().includes(query) ||
+      String(transaction.paymentMethod || "").toLowerCase().includes(query)
+    );
+  });
+
+  return (
+    <div className="bg-white p-6 rounded-xl shadow-sm">
+      <div className="mb-4 flex justify-between items-center">
+        <h2 className="text-2xl font-semibold mb-4" style={{ color: "#003705" }}>
+          View Transactions
+        </h2>
+        <Search
+          placeholder="Search transactions"
+          allowClear
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          style={{ marginBottom: 10, maxWidth: 320 }}
+        />
+      </div>
+
+      <Table
+        rowKey="_id"
+        columns={transactionColumns}
+        dataSource={filteredTransactions}
+        loading={loading}
+      />
+    </div>
+  );
+}
+
+function ViewAdminUsers({ refreshKey }) {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchText, setSearchText] = useState("");
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get("http://localhost:5000/api/users?role=admin");
+      setUsers(res.data || []);
+    } catch (error) {
+      console.error("Error fetching admin users:", error);
+      message.error("Unable to load admin users.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, [refreshKey]);
+
+  const handleDelete = async (id, username) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/users/${id}`);
+      message.success(`${username} deleted successfully.`);
+      fetchUsers();
+    } catch (error) {
+      console.error("Error deleting admin user:", error);
+      message.error("Unable to delete user.");
+    }
+  };
+
+  const columns = [
+    {
+      title: "User ID",
+      dataIndex: "_id",
+      key: "_id",
+    },
+    {
+      title: "Username",
+      dataIndex: "username",
+      key: "username",
+    },
+    {
+      title: "Email",
+      dataIndex: "email",
+      key: "email",
+    },
+    
+    {
+      title: "Action",
+      key: "action",
+      render: (_, record) => (
+        <Button
+          danger
+          type="primary"
+          onClick={() =>
+            Modal.confirm({
+              title: "Delete admin user",
+              content: `Are you sure you want to delete ${record.username}?`,
+              okText: "Delete",
+              okButtonProps: { danger: true },
+              cancelText: "Cancel",
+              onOk: () => handleDelete(record._id, record.username),
+            })
+          }
+        >
+          Delete
+        </Button>
+      ),
+    },
+  ];
+
+  const filteredUsers = users.filter((user) => {
+    const query = searchText.toLowerCase();
+    return (
+      String(user._id || "").toLowerCase().includes(query) ||
+      String(user.username || "").toLowerCase().includes(query) ||
+      String(user.email || "").toLowerCase().includes(query) ||
+      String(user.role || "").toLowerCase().includes(query)
+    );
+  });
+
+  return (
+    <div className="rounded-xl bg-white p-8 shadow-sm">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-semibold" style={{ color: "#003705" }}>
+            View Admin Users
+          </h2>
+          <p className="mt-2 text-gray-600">
+            Manage administrator accounts and remove users when needed.
+          </p>  
+        </div>
+        <div className="flex gap-3 items-center">
+          <Search
+          placeholder="Search admin users"
+          allowClear
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          style={{ maxWidth: 320 }}
+        />
+        <CreateAdminUser
+            onCreated={() => setAdminUsersRefreshKey((prev) => prev + 1)}
+          />
+        </div>
+        
+        
+      </div>
+
+      <Table
+        rowKey="_id"
+        columns={columns}
+        dataSource={filteredUsers}
+        loading={loading}
+      />
+    </div>
   );
 }
 
