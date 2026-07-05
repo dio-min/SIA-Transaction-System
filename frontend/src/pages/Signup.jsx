@@ -1,14 +1,21 @@
 import React, { useState } from "react";
 import { Modal, Button, Form, Input, message } from "antd";
 import axios from "axios";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../api";
 
-const Signup = () => {
+const Signup = ({ autoOpen = false }) => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (autoOpen) {
+      setIsModalOpen(true);
+    }
+  }, [autoOpen]);
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -17,6 +24,10 @@ const Signup = () => {
   const handleCancel = () => {
     setIsModalOpen(false);
     form.resetFields();
+
+    if (autoOpen) {
+      navigate("/login");
+    }
   };
 
   const onFinish = async (values) => {
@@ -43,19 +54,21 @@ const Signup = () => {
 
   return (
     <>
-      <Button
-        size="large"
-        className="rounded-full px-8 py-6 text-lg font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105 w-full sm:w-auto"
-        style={{
-          background: "#002603",
-          color: "#fff",
-          fontFamily: "'Nunito', sans-serif",
-          border: "none",
-        }}
-        onClick={showModal}
-      >
-        Get Started
-      </Button>
+      {!autoOpen && (
+        <Button
+          size="large"
+          className="rounded-full px-8 py-6 text-lg font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105 w-full sm:w-auto"
+          style={{
+            background: "#002603",
+            color: "#fff",
+            fontFamily: "'Nunito', sans-serif",
+            border: "none",
+          }}
+          onClick={showModal}
+        >
+          Get Started
+        </Button>
+      )}
 
       <Modal
         open={isModalOpen}

@@ -1,4 +1,5 @@
 const asyncHandler = require('express-async-handler');
+const mongoose = require('mongoose');
 const Booking = require('../models/booking');
 const User = require('../models/user');
 const Package = require('../models/packages');
@@ -49,6 +50,10 @@ const createBooking = asyncHandler(async (req, res) => {
 const getBookingsByUser = asyncHandler(async (req, res) => {
   const { userId } = req.params;
 
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return res.status(400).json({ message: 'Invalid user ID.' });
+  }
+
   const bookings = await Booking.find({ userId }).sort({ createdAt: -1 });
   res.status(200).json(bookings);
 });
@@ -60,7 +65,13 @@ const getAllBookings = asyncHandler(async (req, res) => {
 
 
 const getBooking = asyncHandler(async (req, res) => {
-const booking = await Booking.findById(req.params.id);
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: 'Invalid booking ID.' });
+  }
+
+  const booking = await Booking.findById(id);
   if (!booking) {
     return res.status(404).json({ message: 'Booking not found.' });
   }

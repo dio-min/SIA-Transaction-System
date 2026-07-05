@@ -9,6 +9,7 @@ const userRoutes = require('./src/routers/userRoutes');
 const packageRoutes = require('./src/routers/packageRoutes');
 const bookingRoutes = require('./src/routers/bookingRoutes');
 const transactionRoutes = require('./src/routers/transactionRoutes');
+const externalRoutes = require('./src/routers/externalRoutes');
 
 const PORT = process.env.PORT || 5000;
 
@@ -21,6 +22,11 @@ app.use('/api/users', userRoutes);
 app.use('/api/packages', packageRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/external', externalRoutes);
+
+
+
+
 
 // Error handler
 app.use((err, req, res, next) => {

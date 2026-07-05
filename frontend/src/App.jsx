@@ -2,6 +2,7 @@ import React from 'react'
 
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom'
 import Login from './pages/Login'
+import Signup from './pages/Signup'
 
 import { Input, Space } from 'antd';
 
@@ -45,6 +46,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup autoOpen />} />
           <Route
             path="/admin"
             element={

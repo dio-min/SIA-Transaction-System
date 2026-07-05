@@ -20,8 +20,10 @@ const handleUploadError = (err, req, res, next) => {
   next();
 };
 // Create a new package
+router.post('/', upload.single('packageImage'), handleUploadError, createPackage);
 router.post('/createPackage', upload.single('packageImage'), handleUploadError, createPackage);
 // Get all packages
+router.get('/', getAllPackages);
 router.get('/getAllPackages', getAllPackages);
 router.get('/:id', getPackageById);
 router.put('/:id', upload.single('packageImage'), handleUploadError, updatePackage);

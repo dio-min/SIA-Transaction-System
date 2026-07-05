@@ -43,7 +43,7 @@ const createTransaction = asyncHandler(async (req, res) => {
 
 
 const getTransactions= asyncHandler(async (req, res) => {
-    const transactions = await Transaction.find().sort({ createdAt: -1 });
+    const transactions = await Transaction.find().sort({ transactionDate: -1, _id: -1 });
     res.status(200).json(transactions);
 });
 

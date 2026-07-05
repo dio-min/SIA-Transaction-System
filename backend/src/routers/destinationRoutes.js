@@ -14,9 +14,15 @@ const handleUploadError = (err, req, res, next) => {
 
 // Create a new destination
 
+router.post('/', upload.single('image'), handleUploadError, createDestination);
 router.post('/createDestination', upload.single('image'), handleUploadError, createDestination);
+router.get('/', getDestination);
 router.get('/getDestination', getDestination);
 router.delete('/:id', deleteDestination);
+router.put('/:id', upload.single('image'), handleUploadError, (req, res, next) => {
+  req.body.id = req.params.id;
+  next();
+}, updateDestination);
 router.put('/updateDestination', upload.single('image'), handleUploadError, updateDestination);
 router.post('/:id/rate', rateDestination);
 
