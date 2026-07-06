@@ -13,6 +13,8 @@ import {
   ConfigProvider,
   Select,
   Tag,
+  Statistic,
+ 
 } from "antd";
 import { LoadingOutlined, PlusOutlined } from "@ant-design/icons";
 import { useState, useEffect } from "react";
@@ -42,6 +44,8 @@ function Admin() {
   }, [selectedMenu]);
 
   const renderContent = () => {
+
+
     if (selectedMenu === "2") {
       return (
         <>
@@ -83,13 +87,11 @@ function Admin() {
 
     return (
       <div className="rounded-xl bg-white p-8 shadow-sm">
-        <h2 className="text-2xl font-semibold" style={{ color: "#003705" }}>
-          Dashboard
-        </h2>
-        <p className="mt-2 text-gray-600">Welcome to the admin dashboard.</p>
+        <Dashboard />
       </div>
     );
-  };
+  }
+      
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -1680,6 +1682,58 @@ function ViewAdminUsers({ refreshKey }) {
         dataSource={filteredUsers}
         loading={loading}
       />
+    </div>
+  );
+}
+
+function Dashboard() {
+  const [summary, setSummary] = useState({
+    totalUsers: 0,
+    totalBookings: 0,
+    totalRevenue: 0,
+  });
+
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/api/admin/summary`);
+        setSummary(res.data);
+      } catch (error) {
+        console.error("Error fetching summary:", error);
+      }
+    };
+
+    fetchSummary();
+  }, []);
+
+  const Statistic = ({ title, value }) => (
+    <div className="mb-4 rounded-lg bg-white p-6 shadow-sm">
+      <h3 className="text-lg font-semibold mb-2">{title}</h3>
+      <p className="text-2xl font-bold">{value}</p>
+    </div>
+  );
+
+
+
+
+
+  
+
+  return (
+    <div className="p-6">
+      <h1 className="text-3xl font-bold mb-6" style={{ color: "#003705" }}>
+        Admin Dashboard
+      </h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <Statistic title="Total Users" value={summary.totalUsers} />
+        <Statistic title="Total Bookings" value={summary.totalBookings} />
+        <Statistic
+          title="Total Revenue"
+          value={`₱${Number(summary.totalRevenue || 0).toLocaleString()}`}
+        />
+      </div>
+
     </div>
   );
 }
