@@ -28,6 +28,8 @@ const createTransaction = asyncHandler(async (req, res) => {
         amount,
         paymentMethod,
         packageName: booking.packageName,
+        type: 'Booking',
+        status: 'Completed',
     
 
         

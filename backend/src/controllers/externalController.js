@@ -32,14 +32,40 @@ const summaryStats = asyncHandler(async (req, res) => {
   const totalRevenue = revenueResult[0]?.totalAmount || 0;
 
   const mostTrendingPackageResult = await Booking.aggregate([
-    { $group: { _id: "$packageId", packageName: { $first: "$packageName" }, count: { $sum: 1 } } },
+    { $group: { _id: "$packageName", count: { $sum: 1 } } },
     { $sort: { count: -1 } },
     { $limit: 1 }
   ]);
 
+  
+
   const mostTrendingPackage = mostTrendingPackageResult[0];
 
-  res.json({ totalBookings, totalDestination, totalTravelerUsers, totalPackages, totalRevenue, mostTrendingPackage,  });
+
+  const totalPaymentMethods = await Transaction.aggregate([
+    { $group: { _id: "$paymentMethod", count: { $sum: 1 } } }
+  ]);
+
+
+  const paymentMethods = totalPaymentMethods.reduce((acc, method) => {
+    acc[method._id] = method.count;
+    return acc;
+  }, {});
+  
+
+  const totalBookingStatus= await Booking.aggregate([
+    { $group: { _id: "$status", count: { $sum: 1 } } }
+  ]);
+
+  const bookingStatus = totalBookingStatus.reduce((acc, status) => {
+    acc[status._id] = status.count;
+    return acc;
+  }, {});
+
+ 
+  
+
+  res.json({ success: true, data: { totalBookings, totalDestination, totalTravelerUsers, totalPackages, totalRevenue, mostTrendingPackage, paymentMethods, bookingStatus     } });
 });
 
 
@@ -48,13 +74,13 @@ const getTransactions = asyncHandler(async (req, res) => {
     return res.status(401).json({ success: false, message: "Unauthorized" });
   }
 
-  const transactions = await Transaction.find().sort({ transactionDate: -1, _id: -1 });
-  res.status(200).json(transactions);
+
+
+  const transactions = await Transaction.find().select("_id userName packageName amount type status paymentMethod transactionDate").sort({ transactionDate: -1, _id: -1 });
+  res.status(200).json({ success: true, data: transactions });
 });
 
 module.exports = {
   summaryStats,
   getTransactions,
 };
-
-

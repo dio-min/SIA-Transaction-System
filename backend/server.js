@@ -12,6 +12,10 @@ const transactionRoutes = require('./src/routers/transactionRoutes');
 const externalRoutes = require('./src/routers/externalRoutes');
 const adminRoutes = require('./src/routers/adminRoutes');
 
+
+
+
+
 const PORT = process.env.PORT || 5000;
 
 const app = express();
@@ -29,6 +33,8 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/external', externalRoutes);
 app.use('/api/admin', adminRoutes);
+
+
 
 
 
