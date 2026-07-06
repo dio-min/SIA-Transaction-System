@@ -17,6 +17,11 @@ const User = require('./src/models/user');
 const Destination = require('./src/models/destination');
 const Transaction = require('./src/models/transaction');
 
+const isAuthorizedInternalRequest = (req) => {
+  const apiKey = req.headers['x-api-key'];
+  return apiKey && apiKey === process.env.INTERNAL_API_KEY;
+}
+
 const PORT = process.env.PORT || 5000;
 
 const app = express();
@@ -32,13 +37,6 @@ app.use('/api/users', userRoutes);
 app.use('/api/packages', packageRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/transactions', transactionRoutes);
-
-
-const isAuthorizedInternalRequest = (req) => {
-  const apiKey = req.headers['x-api-key'];
-  return apiKey && apiKey === process.env.INTERNAL_API_KEY;
-}
-
 app.get("/api/external/summary", async (req, res) => {
   
 
@@ -66,7 +64,6 @@ app.get("/api/external/summary", async (req, res) => {
 
   res.json({ totalBookings, totalDestination, totalTravelerUsers, totalPackages, totalRevenue, mostTrendingPackage,  });
 });
-
 app.get("/api/external/transactions", async (req, res) => {
   // API key check
  if (!isAuthorizedInternalRequest(req)) {
@@ -76,6 +73,10 @@ app.get("/api/external/transactions", async (req, res) => {
   const transactions = await Transaction.find().sort({ transactionDate: -1, _id: -1 });
   res.status(200).json(transactions);
 });
+
+
+
+
 
 
 
