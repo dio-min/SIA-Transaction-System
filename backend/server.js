@@ -39,7 +39,6 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.get("/api/external/summary", async (req, res) => {
   
-
    if (!isAuthorizedInternalRequest(req)) {
     return res.status(401).json({ success: false, message: "Unauthorized" });
   }
@@ -62,7 +61,7 @@ app.get("/api/external/summary", async (req, res) => {
 
   const mostTrendingPackage = mostTrendingPackageResult[0];
 
-  res.json({ totalBookings, totalDestination, totalTravelerUsers, totalPackages, totalRevenue, mostTrendingPackage,  });
+  res.json({ success: true, data: { totalBookings, totalDestination, totalTravelerUsers, totalPackages, totalRevenue, mostTrendingPackage } });
 });
 app.get("/api/external/transactions", async (req, res) => {
   // API key check
@@ -71,7 +70,7 @@ app.get("/api/external/transactions", async (req, res) => {
   }
 
   const transactions = await Transaction.find().sort({ transactionDate: -1, _id: -1 });
-  res.status(200).json(transactions);
+  res.status(200).json({ success: true, data: { transactions } });
 });
 
 
