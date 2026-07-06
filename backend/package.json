@@ -20,6 +20,7 @@
     "mongodb": "^7.3.0",
     "mongoose": "^9.7.1",
     "multer": "^2.2.0",
-    "multer-storage-cloudinary": "^4.0.0"
+    "multer-storage-cloudinary": "^4.0.0",
+    "node": "^26.4.0"
   }
 }
