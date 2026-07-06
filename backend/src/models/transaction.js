@@ -30,7 +30,16 @@ const transactionSchema = new mongoose.Schema({
         enum: ['Credit Card', 'GCash', 'Bank Transfer'],
         required: true,
     },
-   
+    type: {
+        type: String,
+        enum: ['Booking', 'Refund'],
+        required: true,
+    },
+    status: {
+        type: String,
+        enum: ['Pending', 'Completed', 'Failed'],
+        default: 'Pending',
+    },
     transactionDate: {
         type: Date,
         default: Date.now,

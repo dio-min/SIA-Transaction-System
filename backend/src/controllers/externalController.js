@@ -17,9 +17,9 @@ const isAuthorizedInternalRequest = (req) => {
 };
 
 const summaryStats = asyncHandler(async (req, res) => {
-//   if (!isAuthorizedInternalRequest(req)) {
-//     return res.status(401).json({ success: false, message: "Unauthorized" });
-//   }
+  if (!isAuthorizedInternalRequest(req)) {
+    return res.status(401).json({ success: false, message: "Unauthorized" });
+  }
 
   const totalBookings = await Booking.countDocuments();
   const totalPackages = await Package.countDocuments();
@@ -70,13 +70,13 @@ const summaryStats = asyncHandler(async (req, res) => {
 
 
 const getTransactions = asyncHandler(async (req, res) => {
-//   if (!isAuthorizedInternalRequest(req)) {
-//     return res.status(401).json({ success: false, message: "Unauthorized" });
-//   }
+  if (!isAuthorizedInternalRequest(req)) {
+    return res.status(401).json({ success: false, message: "Unauthorized" });
+  }
 
 
 
-  const transactions = await Transaction.find().select("_id userName packageName amount paymentMethod transactionDate").sort({ transactionDate: -1, _id: -1 });
+  const transactions = await Transaction.find().select("_id userName packageName amount type status paymentMethod transactionDate").sort({ transactionDate: -1, _id: -1 });
   res.status(200).json({ success: true, data: transactions });
 });
 
