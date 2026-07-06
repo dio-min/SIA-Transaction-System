@@ -14,9 +14,10 @@ import {
   Select,
   Tag,
   Statistic,
- 
+  Col,
+  Row,
 } from "antd";
-import { LoadingOutlined, PlusOutlined } from "@ant-design/icons";
+import { LoadingOutlined, PlusOutlined, UserOutlined, BookOutlined, ProfileOutlined, DollarOutlined } from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../../api";
@@ -44,8 +45,6 @@ function Admin() {
   }, [selectedMenu]);
 
   const renderContent = () => {
-
-
     if (selectedMenu === "2") {
       return (
         <>
@@ -65,9 +64,7 @@ function Admin() {
     }
 
     if (selectedMenu === "4") {
-      return (
-        <ViewAdminUsers refreshKey={adminUsersRefreshKey} />
-      );
+      return <ViewAdminUsers refreshKey={adminUsersRefreshKey} />;
     }
     if (selectedMenu === "5") {
       return (
@@ -90,8 +87,7 @@ function Admin() {
         <Dashboard />
       </div>
     );
-  }
-      
+  };
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -244,9 +240,6 @@ function CreateAdminUser({ onCreated }) {
   return (
     <div>
       <div className="flex items-center justify-between gap-4">
-        
-       
-
         <Button
           type="primary"
           onClick={handleOpen}
@@ -799,22 +792,17 @@ function ViewDestination() {
       dataIndex: "location",
       key: "location",
     },
-    {
-      title: "Rating",
-      dataIndex: "rating",
-      key: "rating",
-      render: (value) => value ?? "-",
-    },
+    
     {
       title: "Action",
       key: "action",
       render: (_, record) => (
-        <Space size="middle" wrap>
-          <Button type="primary" onClick={() => handleUpdate(record)}>
+        <Space size="middle" >
+          <Button type="primary" onClick={() => handleUpdate(record)} style={{width: "80px"}}>
             Update
           </Button>
 
-          <Button danger type="primary" onClick={() => showModal(record)}>
+          <Button danger type="primary" onClick={() => showModal(record)} style={{width: "80px"}}>
             Delete
           </Button>
         </Space>
@@ -1449,18 +1437,21 @@ function ViewBookings() {
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm">
       <div className="mb-4 flex justify-between items-center">
-        <h2 className="text-2xl font-semibold mb-4" style={{ color: "#003705" }}>
-        View Bookings
-      </h2>
-      <Search
-        placeholder="Search destinations"
-        allowClear
-        value={searchText}
-        onChange={(e) => setSearchText(e.target.value)}
-        style={{ marginBottom: 10, maxWidth: 320 }}
-      />
+        <h2
+          className="text-2xl font-semibold mb-4"
+          style={{ color: "#003705" }}
+        >
+          View Bookings
+        </h2>
+        <Search
+          placeholder="Search destinations"
+          allowClear
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          style={{ marginBottom: 10, maxWidth: 320 }}
+        />
       </div>
-      
+
       <Table
         rowKey="_id"
         columns={bookingColumns}
@@ -1476,12 +1467,13 @@ function ViewTransactions() {
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
 
-
   useEffect(() => {
     const fetchTransactions = async () => {
       setLoading(true);
       try {
-        const res = await axios.get(`${API_BASE_URL}/api/transactions/getTransactions`);
+        const res = await axios.get(
+          `${API_BASE_URL}/api/transactions/getTransactions`,
+        );
         setTransactions(res.data || []);
       } catch (error) {
         console.error("Error fetching transactions:", error);
@@ -1526,24 +1518,34 @@ function ViewTransactions() {
       key: "transactionDate",
       render: (date) => (date ? new Date(date).toLocaleDateString() : "N/A"),
     },
-    
   ];
   const filteredTransactions = transactions.filter((transaction) => {
     const query = searchText.toLowerCase();
     const bookingId = String(transaction.bookingId || "");
     return (
-      String(transaction._id || "").toLowerCase().includes(query) ||
+      String(transaction._id || "")
+        .toLowerCase()
+        .includes(query) ||
       bookingId.toLowerCase().includes(query) ||
-      String(transaction.userName || "").toLowerCase().includes(query) ||
-      String(transaction.packageName || "").toLowerCase().includes(query) ||
-      String(transaction.paymentMethod || "").toLowerCase().includes(query)
+      String(transaction.userName || "")
+        .toLowerCase()
+        .includes(query) ||
+      String(transaction.packageName || "")
+        .toLowerCase()
+        .includes(query) ||
+      String(transaction.paymentMethod || "")
+        .toLowerCase()
+        .includes(query)
     );
   });
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm">
       <div className="mb-4 flex justify-between items-center">
-        <h2 className="text-2xl font-semibold mb-4" style={{ color: "#003705" }}>
+        <h2
+          className="text-2xl font-semibold mb-4"
+          style={{ color: "#003705" }}
+        >
           View Transactions
         </h2>
         <Search
@@ -1614,7 +1616,7 @@ function ViewAdminUsers({ refreshKey }) {
       dataIndex: "email",
       key: "email",
     },
-    
+
     {
       title: "Action",
       key: "action",
@@ -1642,10 +1644,18 @@ function ViewAdminUsers({ refreshKey }) {
   const filteredUsers = users.filter((user) => {
     const query = searchText.toLowerCase();
     return (
-      String(user._id || "").toLowerCase().includes(query) ||
-      String(user.username || "").toLowerCase().includes(query) ||
-      String(user.email || "").toLowerCase().includes(query) ||
-      String(user.role || "").toLowerCase().includes(query)
+      String(user._id || "")
+        .toLowerCase()
+        .includes(query) ||
+      String(user.username || "")
+        .toLowerCase()
+        .includes(query) ||
+      String(user.email || "")
+        .toLowerCase()
+        .includes(query) ||
+      String(user.role || "")
+        .toLowerCase()
+        .includes(query)
     );
   });
 
@@ -1658,22 +1668,20 @@ function ViewAdminUsers({ refreshKey }) {
           </h2>
           <p className="mt-2 text-gray-600">
             Manage administrator accounts and remove users when needed.
-          </p>  
+          </p>
         </div>
         <div className="flex gap-3 items-center">
           <Search
-          placeholder="Search admin users"
-          allowClear
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          style={{ maxWidth: 320 }}
-        />
-        <CreateAdminUser
+            placeholder="Search admin users"
+            allowClear
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ maxWidth: 320 }}
+          />
+          <CreateAdminUser
             onCreated={() => setAdminUsersRefreshKey((prev) => prev + 1)}
           />
         </div>
-        
-        
       </div>
 
       <Table
@@ -1687,11 +1695,7 @@ function ViewAdminUsers({ refreshKey }) {
 }
 
 function Dashboard() {
-  const [summary, setSummary] = useState({
-    totalUsers: 0,
-    totalBookings: 0,
-    totalRevenue: 0,
-  });
+  const [summary, setSummary] = useState([]);
 
   useEffect(() => {
     const fetchSummary = async () => {
@@ -1706,35 +1710,54 @@ function Dashboard() {
     fetchSummary();
   }, []);
 
-  const Statistic = ({ title, value }) => (
-    <div className="mb-4 rounded-lg bg-white p-6 shadow-sm">
-      <h3 className="text-lg font-semibold mb-2">{title}</h3>
-      <p className="text-2xl font-bold">{value}</p>
-    </div>
-  );
-
-
-
-
-
-  
-
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6" style={{ color: "#003705" }}>
-        Admin Dashboard
-      </h1>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <Statistic title="Total Users" value={summary.totalUsers} />
-        <Statistic title="Total Bookings" value={summary.totalBookings} />
+    <div className="p-4 md:p-6">
+  <h1 className="text-2xl md:text-3xl font-bold mb-6" style={{ color: "#003705" }}>
+    Admin Dashboard
+  </h1>
+  
+  <Row gutter={[16, 16]} className="mb-6">
+    <Col xs={24} sm={12} lg={6}>
+      <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
+        <Statistic 
+          title="Total Users" 
+          value={summary.totalTravelerUsers}
+          prefix={<UserOutlined className="text-green-700 mr-2" />}
+        />
+      </div>
+    </Col>
+    
+    <Col xs={24} sm={12} lg={6}>
+      <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
+        <Statistic 
+          title="Total Bookings" 
+          value={summary.totalBookings}
+          prefix={<BookOutlined className="text-blue-600 mr-2" />}
+        />
+      </div>
+    </Col>
+    
+    <Col xs={24} sm={12} lg={6}>
+      <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
+        <Statistic 
+          title="Total Packages" 
+          value={summary.totalPackages}
+          prefix={<ProfileOutlined className="text-purple-600 mr-2" />}
+        />
+      </div>
+    </Col>
+    
+    <Col xs={24} sm={12} lg={6}>
+      <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
         <Statistic
           title="Total Revenue"
           value={`₱${Number(summary.totalRevenue || 0).toLocaleString()}`}
+          
         />
       </div>
-
-    </div>
+    </Col>
+  </Row>
+</div>
   );
 }
 
