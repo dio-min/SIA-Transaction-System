@@ -17,6 +17,12 @@ import {
   Col,
   Row,
 } from "antd";
+
+import { Bar } from "react-chartjs-2";
+
+
+
+
 import { LoadingOutlined, PlusOutlined, UserOutlined, BookOutlined, ProfileOutlined, DollarOutlined } from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -74,13 +80,7 @@ function Admin() {
       );
     }
 
-    if (selectedMenu === "6") {
-      return (
-        <div className="rounded-xl bg-white p-8 shadow-sm">
-          <ViewTransactions />
-        </div>
-      );
-    }
+   
 
     return (
       <div className="rounded-xl bg-white p-8 shadow-sm">
@@ -159,10 +159,7 @@ function Navbar({ selectedKey, onSelect }) {
       key: "5",
       label: "Bookings",
     },
-    {
-      key: "6",
-      label: "Transactions",
-    },
+    
   ];
 
   return (
@@ -1696,6 +1693,7 @@ function ViewAdminUsers({ refreshKey }) {
 
 function Dashboard() {
   const [summary, setSummary] = useState([]);
+  const [packages, setPackages] = useState([]);
 
   useEffect(() => {
     const fetchSummary = async () => {
@@ -1710,6 +1708,19 @@ function Dashboard() {
     fetchSummary();
   }, []);
 
+  // const chartData = {
+  //   labels: ["2016", "2017", "2018", "2019", "2020"],
+  //   datasets: [
+  //     {
+  //       label: "Users Gained",
+  //       data: [200, 400, 600, 800, 1000],
+  //       backgroundColor: "rgba(75, 192, 192, 0.6)",
+  //     },
+  //   ],
+  // };
+
+ 
+ 
   return (
     <div className="p-4 md:p-6">
   <h1 className="text-2xl md:text-3xl font-bold mb-6" style={{ color: "#003705" }}>
@@ -1757,6 +1768,26 @@ function Dashboard() {
       </div>
     </Col>
   </Row>
+  {/* <div className="chart-container">
+      <h2 style={{ textAlign: "center" }}>Bar Chart</h2>
+      <Bar
+        data={chartData}
+        options={{
+          plugins: {
+            title: {
+              display: true,
+              text: "Users Gained between 2016-2020"
+            },
+            legend: {
+              display: false
+            }
+          }
+        }}
+      />
+    </div> */}
+  
+  
+  <ViewTransactions />
 </div>
   );
 }
