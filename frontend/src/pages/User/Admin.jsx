@@ -18,12 +18,39 @@ import {
   Row,
 } from "antd";
 
-import { Bar } from "react-chartjs-2";
+import { Bar, Doughnut } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+);
 
-
-
-
-import { LoadingOutlined, PlusOutlined, UserOutlined, BookOutlined, ProfileOutlined, DollarOutlined } from "@ant-design/icons";
+import {
+  LoadingOutlined,
+  PlusOutlined,
+  UserOutlined,
+  BookOutlined,
+  ProfileOutlined,
+  DollarOutlined,
+} from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../../api";
@@ -80,10 +107,8 @@ function Admin() {
       );
     }
 
-   
-
     return (
-      <div className="rounded-xl bg-white p-8 shadow-sm">
+      <div className="rounded-xl bg-white shadow-sm">
         <Dashboard />
       </div>
     );
@@ -159,7 +184,6 @@ function Navbar({ selectedKey, onSelect }) {
       key: "5",
       label: "Bookings",
     },
-    
   ];
 
   return (
@@ -789,17 +813,26 @@ function ViewDestination() {
       dataIndex: "location",
       key: "location",
     },
-    
+
     {
       title: "Action",
       key: "action",
       render: (_, record) => (
-        <Space size="middle" >
-          <Button type="primary" onClick={() => handleUpdate(record)} style={{width: "80px"}}>
+        <Space size="middle">
+          <Button
+            type="primary"
+            onClick={() => handleUpdate(record)}
+            style={{ width: "80px" }}
+          >
             Update
           </Button>
 
-          <Button danger type="primary" onClick={() => showModal(record)} style={{width: "80px"}}>
+          <Button
+            danger
+            type="primary"
+            onClick={() => showModal(record)}
+            style={{ width: "80px" }}
+          >
             Delete
           </Button>
         </Space>
@@ -1537,10 +1570,10 @@ function ViewTransactions() {
   });
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-sm">
-      <div className="mb-4 flex justify-between items-center">
+    <div className="bg-white  rounded-xl shadow-sm mt-6">
+      <div className=" flex justify-between items-center">
         <h2
-          className="text-2xl font-semibold mb-4"
+          className="text-1xl font-semibold"
           style={{ color: "#003705" }}
         >
           View Transactions
@@ -1559,6 +1592,7 @@ function ViewTransactions() {
         columns={transactionColumns}
         dataSource={filteredTransactions}
         loading={loading}
+     
       />
     </div>
   );
@@ -1692,13 +1726,13 @@ function ViewAdminUsers({ refreshKey }) {
 }
 
 function Dashboard() {
-  const [summary, setSummary] = useState([]);
+  const [summary, setSummary] = useState({});
   const [packages, setPackages] = useState([]);
 
   useEffect(() => {
     const fetchSummary = async () => {
       try {
-        const res = await axios.get(`${API_BASE_URL}/api/admin/summary`);
+        const res = await axios.get(`http://localhost:5000/api/admin/summary`);
         setSummary(res.data);
       } catch (error) {
         console.error("Error fetching summary:", error);
@@ -1708,85 +1742,275 @@ function Dashboard() {
     fetchSummary();
   }, []);
 
-  // const chartData = {
-  //   labels: ["2016", "2017", "2018", "2019", "2020"],
-  //   datasets: [
-  //     {
-  //       label: "Users Gained",
-  //       data: [200, 400, 600, 800, 1000],
-  //       backgroundColor: "rgba(75, 192, 192, 0.6)",
-  //     },
-  //   ],
-  // };
+  // Trending Packages — now horizontal, so long package names
+  // run left-to-right instead of getting rotated and clipped
+  const chartData = {
+    labels: summary.trendingPackageDetails
+      ? Object.keys(summary.trendingPackageDetails)
+      : [],
+    datasets: [
+      {
+        label: "Trending Packages",
+        data: summary.trendingPackageDetails
+          ? Object.values(summary.trendingPackageDetails)
+          : [],
+        backgroundColor: [
+       "rgba(0, 87, 7, 0.7)",
+      "rgba(55, 185, 66, 0.7)",
+       "rgba(148, 233, 155, 0.7)",
+          "rgba(54, 162, 235, 0.7)",
+          "rgba(153, 102, 255, 0.7)",
+          "rgba(201, 203, 207, 0.7)",
+        ],
+        borderColor: [
+         "rgba(0, 87, 7, 0.7)",
+       "rgba(55, 185, 66, 0.7)",
+      "rgba(148, 233, 155, 0.7)",
+          "rgba(54, 162, 235, 1)",
+          "rgba(153, 102, 255, 1)",
+          "rgba(201, 203, 207, 1)",
+        ],
+        borderWidth: 1,
+        borderRadius: 4,
+      },
+    ],
+  };
 
- 
- 
+  const horizontalBarData = {
+    labels: summary.paymentMethods ? Object.keys(summary.paymentMethods) : [],
+    datasets: [
+      {
+        label: "Payment Methods",
+        data: summary.paymentMethods
+          ? Object.values(summary.paymentMethods)
+          : [],
+        backgroundColor: [
+          "rgba(0, 87, 7, 0.7)",
+        "rgba(55, 185, 66, 0.7)",
+         "rgba(148, 233, 155, 0.7)",
+          "rgba(54, 162, 235, 0.7)",
+          "rgba(153, 102, 255, 0.7)",
+          "rgba(201, 203, 207, 0.7)",
+        ],
+        borderColor: [
+       "rgba(0, 87, 7, 0.7)",
+       "rgba(55, 185, 66, 0.7)",
+      "rgba(148, 233, 155, 0.7)",
+          "rgba(54, 162, 235, 0.7)",
+          "rgba(153, 102, 255, 0.7)",
+          "rgba(201, 203, 207, 0.7)",
+        ],
+        borderWidth: 1,
+        borderRadius: 4,
+      },
+    ],
+  };
+
+  const doughnutData = {
+    labels: summary.bookingStatus ? Object.keys(summary.bookingStatus) : [],
+    datasets: [
+      {
+        label: "Booking Status",
+        data: summary.bookingStatus ? Object.values(summary.bookingStatus) : [],
+        backgroundColor: [
+          "rgba(0, 87, 7, 0.7)",
+          "rgba(55, 185, 66, 0.7)",
+        
+        ],
+        borderColor: [
+          "rgba(0, 87, 7, 1)",
+          "rgba(55, 185, 66, 0.7)",
+    
+        ],
+        borderWidth: 1,
+      },
+    ],
+  };
+
   return (
-    <div className="p-4 md:p-6">
-  <h1 className="text-2xl md:text-3xl font-bold mb-6" style={{ color: "#003705" }}>
+    <div className="p-4 ">
+  <h1
+    className="text-2xl md:text-3xl font-bold "
+    style={{ color: "#003705" }}
+  >
     Admin Dashboard
   </h1>
-  
-  <Row gutter={[16, 16]} className="mb-6">
+
+  <Row gutter={[16, 16]} >
     <Col xs={24} sm={12} lg={6}>
-      <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
-        <Statistic 
-          title="Total Users" 
+      <div className="bg-white md:p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
+        <Statistic
+          title="Total Users"
           value={summary.totalTravelerUsers}
           prefix={<UserOutlined className="text-green-700 mr-2" />}
         />
       </div>
     </Col>
-    
+
     <Col xs={24} sm={12} lg={6}>
-      <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
-        <Statistic 
-          title="Total Bookings" 
+      <div className="bg-white md:p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
+        <Statistic
+          title="Total Bookings"
           value={summary.totalBookings}
           prefix={<BookOutlined className="text-blue-600 mr-2" />}
         />
       </div>
     </Col>
-    
+
     <Col xs={24} sm={12} lg={6}>
-      <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
-        <Statistic 
-          title="Total Packages" 
+      <div className="bg-white md:p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
+        <Statistic
+          title="Total Packages"
           value={summary.totalPackages}
           prefix={<ProfileOutlined className="text-purple-600 mr-2" />}
         />
       </div>
     </Col>
-    
+
     <Col xs={24} sm={12} lg={6}>
-      <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
+      <div className="bg-white md:p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
         <Statistic
           title="Total Revenue"
           value={`₱${Number(summary.totalRevenue || 0).toLocaleString()}`}
-          
         />
       </div>
     </Col>
   </Row>
-  {/* <div className="chart-container">
-      <h2 style={{ textAlign: "center" }}>Bar Chart</h2>
-      <Bar
-        data={chartData}
-        options={{
-          plugins: {
-            title: {
-              display: true,
-              text: "Users Gained between 2016-2020"
+
+  {/* Charts Section */}
+  <Row gutter={[16, 16]}>
+    {/* Left Column - Doughnut Chart */}
+    <Col xs={5} lg={8}>
+      <div className="bg-white rounded-xl shadow-sm h-[315px] relative">
+        <Doughnut
+          data={doughnutData}
+          options={{
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              title: {
+                display: true,
+                text: "Booking Status Distribution",
+                font: { size: 12, family:"Poppins"}
+              },
+              legend: {
+                position: "bottom",
+                labels: {
+                  padding: 10,
+                  font: { size: 12 }
+                }
+              },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => `${ctx.label}: ${ctx.parsed}`,
+                },
+              },
             },
-            legend: {
-              display: false
-            }
-          }
-        }}
-      />
-    </div> */}
-  
-  
+          }}
+        />
+      </div>
+    </Col>
+
+    {/* Right Column - Two Bar Charts */}
+    <Col xs={24} lg={16}>
+      <Row gutter={[0, 16]}>
+        {/* First Bar Chart - Row 1 */}
+        <Col xs={24}>
+          <div className="bg-white rounded-xl shadow-sm  ml-17 h-[160px] relative">
+            <Bar
+              data={chartData}
+              options={{
+                indexAxis: "x",
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  title: {
+                    display: true,
+                    text: "Trending Packages",
+                    font: { size: 12, family:"Poppins" }
+                  },
+                  legend: {
+                    display: false,
+                  },
+                  tooltip: {
+                    callbacks: {
+                      label: (ctx) => ctx.parsed.y,
+                    },
+                  },
+                },
+                scales: {
+                  x: {
+                    ticks: {
+                      maxRotation: 20,
+                      minRotation: 0,
+                      autoSkip: true,
+                      maxTicksLimit: 6,
+                      font: { size: 10 },
+                    },
+                  },
+                  y: {
+                    beginAtZero: true,
+                    ticks: { 
+                      precision: 0,
+                      stepSize: 1,
+                      font: { size: 10 }
+                    },
+                  },
+                },
+              }}
+            />
+          </div>
+        </Col>
+
+        {/* Second Bar Chart - Row 2 */}
+        <Col xs={24}>
+        <div className="bg-white  rounded-xl shadow-sm h-[140px] relative">
+            <Bar
+              data={horizontalBarData}
+              options={{
+                indexAxis: "y",
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  title: {
+                    display: true,
+                    text: "Payment Methods Distribution",
+                    font: { size: 12, family:"Poppins" }
+                  },
+                  legend: {
+                    display: false,
+                  },
+                  tooltip: {
+                    callbacks: {
+                      label: (ctx) => ctx.parsed.x,
+                    },
+                  },
+                },
+                scales: {
+                  x: {
+                    beginAtZero: true,
+                    ticks: { 
+                      precision: 0,
+                      stepSize: 1,
+                      font: { size: 10 }
+                    },
+                  },
+                  y: {
+                    ticks: {
+                      font: { size: 11 },
+                      autoSkip: true,
+                      maxTicksLimit: 5,
+                    },
+                  },
+                },
+              }}
+            />
+          </div>
+        </Col>
+      </Row>
+    </Col>
+  </Row>
+ 
   <ViewTransactions />
 </div>
   );

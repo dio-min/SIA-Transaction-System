@@ -20,15 +20,42 @@ const summaryStats = asyncHandler(async (req, res) => {
   ]);
   const totalRevenue = revenueResult[0]?.totalAmount || 0;
 
-  const mostTrendingPackageResult = await Booking.aggregate([
-    { $group: { _id: "$packageId", packageName: { $first: "$packageName" }, count: { $sum: 1 } } },
-    { $sort: { count: -1 } },
-    { $limit: 1 }
+  const trendingPackages = await Booking.aggregate([
+   
+    { $group: { _id: "$packageName", count: { $sum: 1 } } },
+
   ]);
 
-  const mostTrendingPackage = mostTrendingPackageResult[0];
 
-  res.json({ totalBookings, totalDestination, totalTravelerUsers, totalPackages, totalRevenue, mostTrendingPackage,  });
+  const trendingPackageDetails = trendingPackages.reduce((acc, package) => {
+    acc[package._id] = package.count;
+    return acc;
+  }, {});
+
+
+  const totalPaymentMethods = await Transaction.aggregate([
+    { $match: { status: "Completed" } },
+    { $group: { _id: "$paymentMethod", count: { $sum: 1 } } }
+  ]);
+
+
+  const paymentMethods = totalPaymentMethods.reduce((acc, method) => {
+    acc[method._id] = method.count;
+    return acc;
+  }, {});
+  
+
+  const totalBookingStatus= await Booking.aggregate([
+    { $group: { _id: "$status", count: { $sum: 1 } } }
+  ]);
+
+  const bookingStatus = totalBookingStatus.reduce((acc, status) => {
+    acc[status._id] = status.count;
+    return acc;
+  }, {});
+
+
+  res.json({ totalBookings, totalDestination, totalTravelerUsers, totalPackages, totalRevenue, trendingPackageDetails, paymentMethods, bookingStatus });
 });
 
 
