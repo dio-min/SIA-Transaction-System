@@ -17,9 +17,9 @@ const isAuthorizedInternalRequest = (req) => {
 };
 
 const summaryStats = asyncHandler(async (req, res) => {
-  if (!isAuthorizedInternalRequest(req)) {
-    return res.status(401).json({ success: false, message: "Unauthorized" });
-  }
+  // if (!isAuthorizedInternalRequest(req)) {
+  //   return res.status(401).json({ success: false, message: "Unauthorized" });
+  // }
 
   const totalBookings = await Booking.countDocuments();
   const totalPackages = await Package.countDocuments();
@@ -31,15 +31,17 @@ const summaryStats = asyncHandler(async (req, res) => {
   ]);
   const totalRevenue = revenueResult[0]?.totalAmount || 0;
 
-  const mostTrendingPackageResult = await Booking.aggregate([
+  const trendingPackages = await Booking.aggregate([
+   
     { $group: { _id: "$packageName", count: { $sum: 1 } } },
-    { $sort: { count: -1 } },
-    { $limit: 1 }
+
   ]);
 
-  
 
-  const mostTrendingPackage = mostTrendingPackageResult[0];
+  const trendingPackageDetails = trendingPackages.reduce((acc, package) => {
+    acc[package._id] = package.count;
+    return acc;
+  }, {});
 
 
   const totalPaymentMethods = await Transaction.aggregate([
@@ -65,14 +67,14 @@ const summaryStats = asyncHandler(async (req, res) => {
  
   
 
-  res.json({ success: true, data: { totalBookings, totalDestination, totalTravelerUsers, totalPackages, totalRevenue, mostTrendingPackage, paymentMethods, bookingStatus     } });
+  res.json({ success: true, data: { totalBookings, totalDestination, totalTravelerUsers, totalPackages, totalRevenue, trendingPackageDetails, paymentMethods, bookingStatus     } });
 });
 
 
 const getTransactions = asyncHandler(async (req, res) => {
-  if (!isAuthorizedInternalRequest(req)) {
-    return res.status(401).json({ success: false, message: "Unauthorized" });
-  }
+  // if (!isAuthorizedInternalRequest(req)) {
+  //   return res.status(401).json({ success: false, message: "Unauthorized" });
+  // }
 
 
 
