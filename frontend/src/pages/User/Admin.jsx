@@ -1732,7 +1732,7 @@ function Dashboard() {
   useEffect(() => {
     const fetchSummary = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/admin/summary`);
+        const res = await axios.get(`${API_BASE_URL}/api/admin/summary`);
         setSummary(res.data);
       } catch (error) {
         console.error("Error fetching summary:", error);
