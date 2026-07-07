@@ -1,5 +1,4 @@
 const Destination = require("../models/destination");
-
 const asyncHandler = require("express-async-handler");
 
 const createDestination = asyncHandler(async (req, res) => {
