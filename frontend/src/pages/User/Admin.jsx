@@ -1836,7 +1836,7 @@ function Dashboard() {
     Admin Dashboard
   </h1>
 
-  <Row gutter={[16, 16]} >
+  <Row gutter={[16, 16]} className="mb-5">
     <Col xs={24} sm={12} lg={6}>
       <div className="bg-white md:p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
         <Statistic
