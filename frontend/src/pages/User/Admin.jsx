@@ -1572,10 +1572,7 @@ function ViewTransactions() {
   return (
     <div className="bg-white  rounded-xl shadow-sm mt-6">
       <div className=" flex justify-between items-center">
-        <h2
-          className="text-1xl font-semibold"
-          style={{ color: "#003705" }}
-        >
+        <h2 className="text-1xl font-semibold" style={{ color: "#003705" }}>
           View Transactions
         </h2>
         <Search
@@ -1593,7 +1590,6 @@ function ViewTransactions() {
         dataSource={filteredTransactions}
         loading={loading}
         pagination={{ pageSize: 5 }}
-     
       />
     </div>
   );
@@ -1756,17 +1752,17 @@ function Dashboard() {
           ? Object.values(summary.trendingPackageDetails)
           : [],
         backgroundColor: [
-       "rgba(0, 87, 7, 0.7)",
-      "rgba(55, 185, 66, 0.7)",
-       "rgba(148, 233, 155, 0.7)",
+          "rgba(0, 87, 7, 0.7)",
+          "rgba(55, 185, 66, 0.7)",
+          "rgba(148, 233, 155, 0.7)",
           "rgba(54, 162, 235, 0.7)",
           "rgba(153, 102, 255, 0.7)",
           "rgba(201, 203, 207, 0.7)",
         ],
         borderColor: [
-         "rgba(0, 87, 7, 0.7)",
-       "rgba(55, 185, 66, 0.7)",
-      "rgba(148, 233, 155, 0.7)",
+          "rgba(0, 87, 7, 0.7)",
+          "rgba(55, 185, 66, 0.7)",
+          "rgba(148, 233, 155, 0.7)",
           "rgba(54, 162, 235, 1)",
           "rgba(153, 102, 255, 1)",
           "rgba(201, 203, 207, 1)",
@@ -1787,16 +1783,16 @@ function Dashboard() {
           : [],
         backgroundColor: [
           "rgba(0, 87, 7, 0.7)",
-        "rgba(55, 185, 66, 0.7)",
-         "rgba(148, 233, 155, 0.7)",
+          "rgba(55, 185, 66, 0.7)",
+          "rgba(148, 233, 155, 0.7)",
           "rgba(54, 162, 235, 0.7)",
           "rgba(153, 102, 255, 0.7)",
           "rgba(201, 203, 207, 0.7)",
         ],
         borderColor: [
-       "rgba(0, 87, 7, 0.7)",
-       "rgba(55, 185, 66, 0.7)",
-      "rgba(148, 233, 155, 0.7)",
+          "rgba(0, 87, 7, 0.7)",
+          "rgba(55, 185, 66, 0.7)",
+          "rgba(148, 233, 155, 0.7)",
           "rgba(54, 162, 235, 0.7)",
           "rgba(153, 102, 255, 0.7)",
           "rgba(201, 203, 207, 0.7)",
@@ -1816,15 +1812,12 @@ function Dashboard() {
         backgroundColor: [
           "rgba(0, 87, 7, 0.7)",
           "rgba(55, 185, 66, 0.7)",
-           "rgba(148, 233, 155, 0.7)",
-          
-        
+          "rgba(148, 233, 155, 0.7)",
         ],
         borderColor: [
           "rgba(0, 87, 7, 1)",
           "rgba(55, 185, 66, 0.7)",
-   "rgba(148, 233, 155, 0.7)",
-    
+          "rgba(148, 233, 155, 0.7)",
         ],
         borderWidth: 1,
       },
@@ -1833,190 +1826,190 @@ function Dashboard() {
 
   return (
     <div className="p-4 ">
-  <h1
-    className="text-2xl md:text-3xl font-bold "
-    style={{ color: "#003705" }}
-  >
-    Admin Dashboard
-  </h1>
+      <h1
+        className="text-2xl md:text-3xl font-bold "
+        style={{ color: "#003705" }}
+      >
+        Admin Dashboard
+      </h1>
 
-  <Row gutter={[16, 16]} className="mb-5">
-    <Col xs={24} sm={12} lg={6}>
-      <div className="bg-white md:p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
-        <Statistic
-          title="Total Users"
-          value={summary.totalTravelerUsers}
-          prefix={<UserOutlined className="text-green-700 mr-2" />}
-        />
-      </div>
-    </Col>
-
-    <Col xs={24} sm={12} lg={6}>
-      <div className="bg-white md:p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
-        <Statistic
-          title="Total Bookings"
-          value={summary.totalBookings}
-          prefix={<BookOutlined className="text-blue-600 mr-2" />}
-        />
-      </div>
-    </Col>
-
-    <Col xs={24} sm={12} lg={6}>
-      <div className="bg-white md:p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
-        <Statistic
-          title="Total Packages"
-          value={summary.totalPackages}
-          prefix={<ProfileOutlined className="text-purple-600 mr-2" />}
-        />
-      </div>
-    </Col>
-
-    <Col xs={24} sm={12} lg={6}>
-      <div className="bg-white md:p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
-        <Statistic
-          title="Total Revenue"
-          value={`₱${Number(summary.totalRevenue || 0).toLocaleString()}`}
-        />
-      </div>
-    </Col>
-  </Row>
-
-  {/* Charts Section */}
-  <Row gutter={[16, 16]}>
-    {/* Left Column - Doughnut Chart */}
-    <Col xs={5} lg={8}>
-      <div className="bg-white rounded-xl shadow-sm h-[315px] relative">
-        <Doughnut
-          data={doughnutData}
-          options={{
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              title: {
-                display: true,
-                text: "Booking Status Distribution",
-                font: { size: 12, family:"Poppins"}
-              },
-              legend: {
-                position: "bottom",
-                labels: {
-                  padding: 10,
-                  font: { size: 12 }
-                }
-              },
-              tooltip: {
-                callbacks: {
-                  label: (ctx) => `${ctx.label}: ${ctx.parsed}`,
-                },
-              },
-            },
-          }}
-        />
-      </div>
-    </Col>
-
-    {/* Right Column - Two Bar Charts */}
-    <Col xs={24} lg={16}>
-      <Row gutter={[0, 16]}>
-        {/* First Bar Chart - Row 1 */}
-        <Col xs={24}>
-          <div className="bg-white rounded-xl shadow-sm  ml-17 h-[160px] relative">
-            <Bar
-              data={chartData}
-              options={{
-                indexAxis: "x",
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  title: {
-                    display: true,
-                    text: "Trending Packages",
-                    font: { size: 12, family:"Poppins" }
-                  },
-                  legend: {
-                    display: false,
-                  },
-                  tooltip: {
-                    callbacks: {
-                      label: (ctx) => ctx.parsed.y,
-                    },
-                  },
-                },
-                scales: {
-                  x: {
-                    ticks: {
-                      maxRotation: 20,
-                      minRotation: 0,
-                      autoSkip: true,
-                      maxTicksLimit: 6,
-                      font: { size: 10 },
-                    },
-                  },
-                  y: {
-                    beginAtZero: true,
-                    ticks: { 
-                      precision: 0,
-                      stepSize: 1,
-                      font: { size: 10 }
-                    },
-                  },
-                },
-              }}
+      <Row gutter={[16, 16]} className="mb-5">
+        <Col xs={24} sm={12} lg={6}>
+          <div className="bg-white md:p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
+            <Statistic
+              title="Total Users"
+              value={summary.totalTravelerUsers}
+              prefix={<UserOutlined className="text-green-700 mr-2" />}
             />
           </div>
         </Col>
 
-        {/* Second Bar Chart - Row 2 */}
-        <Col xs={24}>
-        <div className="bg-white  rounded-xl shadow-sm h-[140px] relative">
-            <Bar
-              data={horizontalBarData}
-              options={{
-                indexAxis: "y",
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  title: {
-                    display: true,
-                    text: "Payment Methods Distribution",
-                    font: { size: 12, family:"Poppins" }
-                  },
-                  legend: {
-                    display: false,
-                  },
-                  tooltip: {
-                    callbacks: {
-                      label: (ctx) => ctx.parsed.x,
-                    },
-                  },
-                },
-                scales: {
-                  x: {
-                    beginAtZero: true,
-                    ticks: { 
-                      precision: 0,
-                      stepSize: 1,
-                      font: { size: 10 }
-                    },
-                  },
-                  y: {
-                    ticks: {
-                      font: { size: 11 },
-                      autoSkip: true,
-                      maxTicksLimit: 5,
-                    },
-                  },
-                },
-              }}
+        <Col xs={24} sm={12} lg={6}>
+          <div className="bg-white md:p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
+            <Statistic
+              title="Total Bookings"
+              value={summary.totalBookings}
+              prefix={<BookOutlined className="text-blue-600 mr-2" />}
+            />
+          </div>
+        </Col>
+
+        <Col xs={24} sm={12} lg={6}>
+          <div className="bg-white md:p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
+            <Statistic
+              title="Total Packages"
+              value={summary.totalPackages}
+              prefix={<ProfileOutlined className="text-purple-600 mr-2" />}
+            />
+          </div>
+        </Col>
+
+        <Col xs={24} sm={12} lg={6}>
+          <div className="bg-white md:p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
+            <Statistic
+              title="Total Revenue"
+              value={`₱${Number(summary.totalRevenue || 0).toLocaleString()}`}
             />
           </div>
         </Col>
       </Row>
-    </Col>
-  </Row>
- 
-  <ViewTransactions />
-</div>
+
+      {/* Charts Section */}
+      <Row gutter={[16, 16]}>
+        {/* Left Column - Doughnut Chart */}
+        <Col xs={5} lg={8}>
+          <div className="bg-white rounded-xl shadow-sm h-[315px] relative">
+            <Doughnut
+              data={doughnutData}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  title: {
+                    display: true,
+                    text: "Booking Status Distribution",
+                    font: { size: 12, family: "Poppins" },
+                  },
+                  legend: {
+                    position: "bottom",
+                    labels: {
+                      padding: 10,
+                      font: { size: 12 },
+                    },
+                  },
+                  tooltip: {
+                    callbacks: {
+                      label: (ctx) => `${ctx.label}: ${ctx.parsed}`,
+                    },
+                  },
+                },
+              }}
+            />
+          </div>
+        </Col>
+
+        {/* Right Column - Two Bar Charts */}
+        <Col xs={24} lg={16}>
+          <Row gutter={[0, 16]}>
+            {/* First Bar Chart - Row 1 */}
+            <Col xs={24}>
+              <div className="bg-white rounded-xl shadow-sm  ml-17 h-[160px] relative">
+                <Bar
+                  data={chartData}
+                  options={{
+                    indexAxis: "x",
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      title: {
+                        display: true,
+                        text: "Trending Packages",
+                        font: { size: 12, family: "Poppins" },
+                      },
+                      legend: {
+                        display: false,
+                      },
+                      tooltip: {
+                        callbacks: {
+                          label: (ctx) => ctx.parsed.y,
+                        },
+                      },
+                    },
+                    scales: {
+                      x: {
+                        ticks: {
+                          maxRotation: 20,
+                          minRotation: 0,
+                          autoSkip: true,
+                          maxTicksLimit: 6,
+                          font: { size: 10 },
+                        },
+                      },
+                      y: {
+                        beginAtZero: true,
+                        ticks: {
+                          precision: 0,
+                          stepSize: 1,
+                          font: { size: 10 },
+                        },
+                      },
+                    },
+                  }}
+                />
+              </div>
+            </Col>
+
+            {/* Second Bar Chart - Row 2 */}
+            <Col xs={24}>
+              <div className="bg-white  rounded-xl shadow-sm h-[140px] relative">
+                <Bar
+                  data={horizontalBarData}
+                  options={{
+                    indexAxis: "y",
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      title: {
+                        display: true,
+                        text: "Payment Methods Distribution",
+                        font: { size: 12, family: "Poppins" },
+                      },
+                      legend: {
+                        display: false,
+                      },
+                      tooltip: {
+                        callbacks: {
+                          label: (ctx) => ctx.parsed.x,
+                        },
+                      },
+                    },
+                    scales: {
+                      x: {
+                        beginAtZero: true,
+                        ticks: {
+                          precision: 0,
+                          stepSize: 1,
+                          font: { size: 10 },
+                        },
+                      },
+                      y: {
+                        ticks: {
+                          font: { size: 11 },
+                          autoSkip: true,
+                          maxTicksLimit: 5,
+                        },
+                      },
+                    },
+                  }}
+                />
+              </div>
+            </Col>
+          </Row>
+        </Col>
+      </Row>
+
+      <ViewTransactions />
+    </div>
   );
 }
 

@@ -609,9 +609,9 @@ function Traveler() {
 
   const resumePayment = (booking) => {
     if (booking.status === "Cancelled") {
-    message.error("This booking was cancelled and can't be paid for.");
-    return;
-  }
+      message.error("This booking was cancelled and can't be paid for.");
+      return;
+    }
     const bookingId = booking._id || booking.id;
     const matchedPackage = packages.find(
       (p) => (p._id || p.id) === (booking.packageId?._id || booking.packageId),
@@ -637,7 +637,6 @@ function Traveler() {
     setSelectedMenu("7");
   };
 
- 
   const handlePayment = async (amount) => {
     if (!currentUser?._id) {
       message.error("You must be signed in to pay.");
@@ -678,6 +677,11 @@ function Traveler() {
     } finally {
       setProcessingPayment(false);
     }
+  };
+  const paymentStatusColors = {
+    Paid: "green",
+    Unpaid: "orange",
+    Cancelled: "red",
   };
 
   const renderContent = () => {
@@ -721,21 +725,25 @@ function Traveler() {
                           </Button>,
                         ]
                       : []),
-                    ...(booking.paymentStatus !== "Paid" && booking.status !== "Cancelled"
-    ? [
-        <Button
-          type="primary"
-          style={{ backgroundColor: "#005707", border: "none" }}
-          onClick={(e) => {
-            e.stopPropagation();
-            resumePayment(booking);
-          }}
-        >
-          Pay Now
-        </Button>,
-      ]
-    : []),
-]}
+                    ...(booking.paymentStatus !== "Paid" &&
+                    booking.status !== "Cancelled"
+                      ? [
+                          <Button
+                            type="primary"
+                            style={{
+                              backgroundColor: "#005707",
+                              border: "none",
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              resumePayment(booking);
+                            }}
+                          >
+                            Pay Now
+                          </Button>,
+                        ]
+                      : []),
+                  ]}
                 >
                   <List.Item.Meta
                     title={booking.packageName || booking.name}
@@ -749,11 +757,14 @@ function Traveler() {
                     }
                   />
                   {booking.paymentStatus && (
-  <Tag color={booking.paymentStatus === "Paid" ? "green" : "orange"}>
-    {booking.paymentStatus}
-  </Tag>
-)}
-
+                    <Tag
+                      color={
+                        paymentStatusColors[booking.paymentStatus] || "default"
+                      }
+                    >
+                      {booking.paymentStatus}
+                    </Tag>
+                  )}
                 </List.Item>
               )}
             />
@@ -812,16 +823,16 @@ function Traveler() {
                   </Button>
                 )}
                 {viewedBooking &&
-  viewedBooking.paymentStatus !== "Paid" &&
-  viewedBooking.status !== "Cancelled" && (
-    <Button
-      type="primary"
-      style={{ backgroundColor: "#005707", border: "none" }}
-      onClick={() => resumePayment(viewedBooking)}
-    >
-      Pay Now
-    </Button>
-  )}
+                  viewedBooking.paymentStatus !== "Paid" &&
+                  viewedBooking.status !== "Cancelled" && (
+                    <Button
+                      type="primary"
+                      style={{ backgroundColor: "#005707", border: "none" }}
+                      onClick={() => resumePayment(viewedBooking)}
+                    >
+                      Pay Now
+                    </Button>
+                  )}
                 <Button onClick={() => setIsBookingDetailsOpen(false)}>
                   Close
                 </Button>
@@ -1259,7 +1270,6 @@ function Traveler() {
                 border: "none",
               }}
               onClick={async () => {
-               
                 const success = await handlePayment(total);
                 if (!success) return;
 
