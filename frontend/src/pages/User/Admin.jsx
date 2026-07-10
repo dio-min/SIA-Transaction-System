@@ -42,7 +42,8 @@ ChartJS.register(
   Tooltip,
   Legend,
 );
-
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import {
   LoadingOutlined,
   PlusOutlined,
@@ -1755,7 +1756,7 @@ function Dashboard() {
           "rgba(0, 87, 7, 0.7)",
           "rgba(55, 185, 66, 0.7)",
           "rgba(148, 233, 155, 0.7)",
-          "rgba(54, 162, 235, 0.7)",
+          "rgba(51, 134, 34, 0.7)",
           "rgba(153, 102, 255, 0.7)",
           "rgba(201, 203, 207, 0.7)",
         ],
@@ -1763,7 +1764,7 @@ function Dashboard() {
           "rgba(0, 87, 7, 0.7)",
           "rgba(55, 185, 66, 0.7)",
           "rgba(148, 233, 155, 0.7)",
-          "rgba(54, 162, 235, 1)",
+          "rgba(51, 134, 34, 0.7)",
           "rgba(153, 102, 255, 1)",
           "rgba(201, 203, 207, 1)",
         ],
@@ -1785,7 +1786,7 @@ function Dashboard() {
           "rgba(0, 87, 7, 0.7)",
           "rgba(55, 185, 66, 0.7)",
           "rgba(148, 233, 155, 0.7)",
-          "rgba(54, 162, 235, 0.7)",
+          "rgba(253, 255, 114, 0.7)",
           "rgba(153, 102, 255, 0.7)",
           "rgba(201, 203, 207, 0.7)",
         ],
@@ -1793,7 +1794,7 @@ function Dashboard() {
           "rgba(0, 87, 7, 0.7)",
           "rgba(55, 185, 66, 0.7)",
           "rgba(148, 233, 155, 0.7)",
-          "rgba(54, 162, 235, 0.7)",
+          "rgba(253, 255, 114, 0.7)",
           "rgba(153, 102, 255, 0.7)",
           "rgba(201, 203, 207, 0.7)",
         ],
@@ -1826,12 +1827,15 @@ function Dashboard() {
 
   return (
     <div className="p-4 ">
-      <h1
-        className="text-2xl md:text-3xl font-bold "
-        style={{ color: "#003705" }}
-      >
-        Admin Dashboard
-      </h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1
+          className="text-2xl md:text-3xl font-bold "
+          style={{ color: "#003705" }}
+        >
+          Admin Dashboard
+        </h1>
+        <GenerateReport />
+      </div>
 
       <Row gutter={[16, 16]} className="mb-5">
         <Col xs={24} sm={12} lg={6}>
@@ -2009,6 +2013,155 @@ function Dashboard() {
       </Row>
 
       <ViewTransactions />
+    </div>
+  );
+}
+
+function GenerateReport() {
+  const [summary, setSummary] = useState({});
+  const [transactions, setTransactions] = useState({});
+  const [packages, setPackages] = useState([]);
+
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/api/admin/summary`);
+        setSummary(res.data);
+      } catch (error) {
+        console.error("Error fetching summary:", error);
+      }
+    };
+
+    fetchSummary();
+  }, []);
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const res = await axios.get(
+          `${API_BASE_URL}/api/transactions/getTransactions`,
+        );
+        setTransactions(res.data);
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
+      }
+    };
+
+    fetchTransactions();
+  }, []);
+
+  const generatePDF = () => {
+    const doc = new jsPDF();
+
+    doc.setFontSize(18);
+    doc.text("Admin Report", 14, 22);
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+
+    const tableColumn = [
+      "Total Users",
+      "Total Bookings",
+      "Total Packages",
+      "Total Revenue",
+    ];
+
+    const tableRows = [
+      [
+        summary.totalTravelerUsers || 0,
+        summary.totalBookings || 0,
+        summary.totalPackages || 0,
+        `₱${Number(summary.totalRevenue || 0).toLocaleString()}`,
+      ],
+    ];
+
+    const transactionTableColumn = [
+      "Transaction ID",
+      "User",
+      "Package",
+      "Amount",
+      "Payment Method",
+      "Transaction Date",
+    ];
+
+    const transactionTableRows = transactions.map((transaction) => [
+      transaction._id,
+      transaction.userName,
+      transaction.packageName,
+      transaction.amount
+        ? `₱${Number(transaction.amount).toLocaleString()}`
+        : "",
+      transaction.paymentMethod || "",
+      transaction.transactionDate
+        ? new Date(transaction.transactionDate).toLocaleDateString()
+        : "",
+    ]);
+
+    const paymentMethodColumn = ["Payment Method", "Count"];
+
+    const paymentMethodRows = Object.entries(summary.paymentMethods || {}).map(
+      ([method, count]) => [method, count],
+    );
+
+    const bookingStatusColumn = ["Booking Status", "Count"];
+
+    const bookingStatusRows = Object.entries(summary.bookingStatus || {}).map(
+      ([status, count]) => [status, count],
+    );
+
+    const packageTableColumn = ["Package Name", "Count"];
+
+    const packageTableRows = Object.entries(
+      summary.trendingPackageDetails || {},
+    ).map(([packageName, count]) => [packageName, count]);
+
+  
+
+doc.text("Summary", 14, 38);
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 40,
+      headStyles: { fillColor: "#005707" },
+      
+    });
+    autoTable(doc, {
+      head: [bookingStatusColumn],
+      body: bookingStatusRows,
+      startY: doc.lastAutoTable.finalY + 10,
+            headStyles: { fillColor: "#005707" },
+    });
+    autoTable(doc, {
+      head: [packageTableColumn],
+      body: packageTableRows,
+      startY: doc.lastAutoTable.finalY + 10,
+            headStyles: { fillColor: "#005707" },
+    });
+    autoTable(doc, {
+      head: [paymentMethodColumn],
+      body: paymentMethodRows,
+      startY: doc.lastAutoTable.finalY + 10,
+            headStyles: { fillColor: "#005707" },
+    });
+    doc.text("Transactions", 14, doc.lastAutoTable.finalY + 25);
+
+    autoTable(doc, {
+      head: [transactionTableColumn],
+      body: transactionTableRows,
+      startY: doc.lastAutoTable.finalY + 30,
+      headStyles: { fillColor: "#005707" },
+    });
+
+    doc.save("admin-report.pdf");
+  };
+
+  return (
+    <div>
+      <Button
+        type="primary"
+        onClick={generatePDF}
+        style={{ backgroundColor: "#005707", marginBottom: "20px" }}
+      >
+        Generate PDF Report
+      </Button>
     </div>
   );
 }
