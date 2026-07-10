@@ -6,6 +6,7 @@ const {
   getBookingsByUser,
   getAllBookings,
   getBooking,
+  cancelBooking
 } = require('../controllers/bookingController');
 
 router.post('/', createBooking);
@@ -14,6 +15,7 @@ router.get('/', getAllBookings);
 router.get('/user/:userId', getBookingsByUser);
 router.get('/:id', getBooking);
 router.get('/getBooking/:id', getBooking);
+router.put('/cancel/:id', cancelBooking);
 
 
 

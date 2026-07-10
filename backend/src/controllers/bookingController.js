@@ -79,11 +79,32 @@ const getBooking = asyncHandler(async (req, res) => {
 });
 
 
+const cancelBooking = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: 'Invalid booking ID.' });
+  }
+
+  const booking = await Booking.findById(id);
+  if (!booking) {
+    return res.status(404).json({ message: 'Booking not found.' });
+  }
+
+  booking.status = 'Cancelled';
+  booking.paymentStatus = 'Cancelled';
+  await booking.save();
+
+  res.status(200).json({ message: 'Booking cancelled successfully.', booking });
+});
+
+
 
 module.exports = {
   createBooking,
   getBookingsByUser,
   getAllBookings,
   getBooking,
-
+  cancelBooking
 };
+  

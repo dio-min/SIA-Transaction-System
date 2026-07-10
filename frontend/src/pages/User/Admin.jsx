@@ -1592,6 +1592,7 @@ function ViewTransactions() {
         columns={transactionColumns}
         dataSource={filteredTransactions}
         loading={loading}
+        pagination={{ pageSize: 5 }}
      
       />
     </div>
@@ -1815,11 +1816,14 @@ function Dashboard() {
         backgroundColor: [
           "rgba(0, 87, 7, 0.7)",
           "rgba(55, 185, 66, 0.7)",
+           "rgba(148, 233, 155, 0.7)",
+          
         
         ],
         borderColor: [
           "rgba(0, 87, 7, 1)",
           "rgba(55, 185, 66, 0.7)",
+   "rgba(148, 233, 155, 0.7)",
     
         ],
         borderWidth: 1,

@@ -21,13 +21,11 @@ import {
   List,
   Radio,
   Select,
-  
 } from "antd";
 import {
   MenuOutlined,
   HomeOutlined,
   CalendarOutlined,
-  
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -37,10 +35,6 @@ const { Header, Footer, Content } = Layout;
 const { Meta } = Card;
 const { Search } = Input;
 
-// Menu keys that are safe to restore from localStorage on page load.
-// Booking-flow keys (4-7) depend on in-memory state (selectedPackage,
-// bookingForm) that is NOT persisted, so restoring straight into those
-// steps after a refresh would crash the app.
 const RESTORABLE_MENU_KEYS = ["0", "2", "3"];
 
 const PAYMENT_METHODS = [
@@ -107,7 +101,6 @@ function Navbar({ onSearch, selectedKey, onSelect, onSignOut }) {
           onClose={onClose}
           open={open}
           width={280}
-          
         >
           <Menu
             mode="vertical"
@@ -121,12 +114,7 @@ function Navbar({ onSearch, selectedKey, onSelect, onSignOut }) {
           />
 
           <div className="mt-8">
-            <Button 
-              danger 
-              block 
-              size="large"
-              onClick={handleSignOut}
-            >
+            <Button danger block size="large" onClick={handleSignOut}>
               Sign Out
             </Button>
           </div>
@@ -369,33 +357,32 @@ function ViewDestination({
 function WelcomeSection({ currentUser }) {
   const [heroImage, setHeroImage] = useState("");
 
-useEffect(() => {
-  const fetchHero = async () => {
-    try {
-      const res = await axios.get(
-          `${API_BASE_URL}/api/destinations/getDestination`
-      );
+  useEffect(() => {
+    const fetchHero = async () => {
+      try {
+        const res = await axios.get(
+          `${API_BASE_URL}/api/destinations/getDestination`,
+        );
 
-      const firstImage = res.data.find(
-        (d) => d.imageUrl || d.destinationImage
-      );
+        const firstImage = res.data.find(
+          (d) => d.imageUrl || d.destinationImage,
+        );
 
-      if (firstImage) {
-        setHeroImage(firstImage.imageUrl || firstImage.destinationImage);
+        if (firstImage) {
+          setHeroImage(firstImage.imageUrl || firstImage.destinationImage);
+        }
+      } catch (err) {
+        console.error(err);
       }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    };
 
-  fetchHero();
-}, []);
+    fetchHero();
+  }, []);
   return (
     <div
       className="relative mb-10 overflow-hidden rounded-3xl"
       style={{
-        backgroundImage:
-          "url(" + heroImage + ")",
+        backgroundImage: "url(" + heroImage + ")",
         backgroundSize: "cover",
         backgroundPosition: "center",
         minHeight: 280,
@@ -422,22 +409,28 @@ useEffect(() => {
           and create unforgettable memories across Nueva Vizcaya.
         </p>
 
-       <div className="mt-8 flex gap-8">
-  <div className="flex flex-col items-center">
-    <span className="material-symbols-outlined text-4xl text-white">search</span>
-    <p className="text-sm mt-2">Beautiful Destinations</p>
-  </div>
+        <div className="mt-8 flex gap-8">
+          <div className="flex flex-col items-center">
+            <span className="material-symbols-outlined text-4xl text-white">
+              search
+            </span>
+            <p className="text-sm mt-2">Beautiful Destinations</p>
+          </div>
 
-  <div className="flex flex-col items-center">
-    <span className="material-symbols-outlined text-4xl text-white">luggage</span>
-    <p className="text-sm mt-2">Travel Packages</p>
-  </div>
+          <div className="flex flex-col items-center">
+            <span className="material-symbols-outlined text-4xl text-white">
+              luggage
+            </span>
+            <p className="text-sm mt-2">Travel Packages</p>
+          </div>
 
-  <div className="flex flex-col items-center">
-    <span className="material-symbols-outlined text-4xl text-white">star</span>
-    <p className="text-sm mt-2">Best Experiences</p>
-  </div>
-</div>
+          <div className="flex flex-col items-center">
+            <span className="material-symbols-outlined text-4xl text-white">
+              star
+            </span>
+            <p className="text-sm mt-2">Best Experiences</p>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -449,6 +442,10 @@ function Traveler() {
     const saved = localStorage.getItem("travellerSelectedMenu");
     return RESTORABLE_MENU_KEYS.includes(saved) ? saved : "0";
   });
+
+  const [cancelingBookingId, setCancelingBookingId] = useState(null);
+  const [bookingToCancel, setBookingToCancel] = useState(null);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
 
   // Shared data/state, lifted here so both the fetch and ViewDestination
   // can use the same source of truth.
@@ -584,12 +581,37 @@ function Traveler() {
 
   const onSearch = (value) => setQuery(value.trim());
 
-  // Lets the user pay for a booking that was already created but is still
-  // "Unpaid" — jumps straight to the payment step (7) using the booking's
-  // own data, instead of forcing them to rebook from scratch. Needs the
-  // matching package (for price/capacity) since the booking record itself
-  // only stores packageName, not the full package details.
+  const openCancelModal = (booking) => {
+    setBookingToCancel(booking);
+    setIsCancelModalOpen(true);
+  };
+
+  // Cancels a booking that's still "Pending" and hasn't been paid for.
+  const confirmCancelBooking = async () => {
+    if (!bookingToCancel) return;
+    const bookingId = bookingToCancel._id || bookingToCancel.id;
+
+    setCancelingBookingId(bookingId);
+    try {
+      await axios.put(`${API_BASE_URL}/api/bookings/cancel/${bookingId}`);
+      message.success("Booking cancelled.");
+      setIsCancelModalOpen(false);
+      setBookingToCancel(null);
+      setIsBookingDetailsOpen(false);
+      await fetchBookings();
+    } catch (err) {
+      console.error(err);
+      message.error("Could not cancel booking. Please try again.");
+    } finally {
+      setCancelingBookingId(null);
+    }
+  };
+
   const resumePayment = (booking) => {
+    if (booking.status === "Cancelled") {
+    message.error("This booking was cancelled and can't be paid for.");
+    return;
+  }
     const bookingId = booking._id || booking.id;
     const matchedPackage = packages.find(
       (p) => (p._id || p.id) === (booking.packageId?._id || booking.packageId),
@@ -615,12 +637,7 @@ function Traveler() {
     setSelectedMenu("7");
   };
 
-  // Creates the transaction record for the already-created booking.
-  // Returns true on success, false on failure, so the caller can decide
-  // what to do next (navigate away, show an error, etc.) instead of this
-  // function silently swallowing the outcome.
-  // The backend's createTransaction requires userId, bookingId,
-  // paymentMethod, AND amount — all four are required or it 400s.
+ 
   const handlePayment = async (amount) => {
     if (!currentUser?._id) {
       message.error("You must be signed in to pay.");
@@ -664,7 +681,7 @@ function Traveler() {
   };
 
   const renderContent = () => {
-      if (selectedMenu === "3") {
+    if (selectedMenu === "3") {
       return (
         <div className="space-y-6">
           <div>
@@ -691,24 +708,34 @@ function Traveler() {
                     setIsBookingDetailsOpen(true);
                   }}
                   actions={[
-                    ...(booking.paymentStatus !== "Paid"
+                    ...(booking.status === "Pending"
                       ? [
                           <Button
-                            type="primary"
-                            style={{
-                              backgroundColor: "#005707",
-                              border: "none",
-                            }}
+                            danger
                             onClick={(e) => {
                               e.stopPropagation();
-                              resumePayment(booking);
+                              openCancelModal(booking);
                             }}
                           >
-                            Pay Now
+                            Cancel
                           </Button>,
                         ]
                       : []),
-                  ]}
+                    ...(booking.paymentStatus !== "Paid" && booking.status !== "Cancelled"
+    ? [
+        <Button
+          type="primary"
+          style={{ backgroundColor: "#005707", border: "none" }}
+          onClick={(e) => {
+            e.stopPropagation();
+            resumePayment(booking);
+          }}
+        >
+          Pay Now
+        </Button>,
+      ]
+    : []),
+]}
                 >
                   <List.Item.Meta
                     title={booking.packageName || booking.name}
@@ -722,18 +749,56 @@ function Traveler() {
                     }
                   />
                   {booking.paymentStatus && (
-                    <Tag
-                      color={
-                        booking.paymentStatus === "Paid" ? "green" : "orange"
-                      }
-                    >
-                      {booking.paymentStatus}
-                    </Tag>
-                  )}
+  <Tag color={booking.paymentStatus === "Paid" ? "green" : "orange"}>
+    {booking.paymentStatus}
+  </Tag>
+)}
+
                 </List.Item>
               )}
             />
           )}
+          <Modal
+            title="Cancel this booking?"
+            open={isCancelModalOpen}
+            onCancel={() => {
+              setIsCancelModalOpen(false);
+              setBookingToCancel(null);
+            }}
+            footer={
+              <div className="flex justify-end gap-2">
+                <Button
+                  onClick={() => {
+                    setIsCancelModalOpen(false);
+                    setBookingToCancel(null);
+                  }}
+                >
+                  No, keep it
+                </Button>
+                <Button
+                  danger
+                  type="primary"
+                  loading={
+                    cancelingBookingId ===
+                    (bookingToCancel?._id || bookingToCancel?.id)
+                  }
+                  onClick={confirmCancelBooking}
+                >
+                  Yes, cancel booking
+                </Button>
+              </div>
+            }
+          >
+            <p>
+              This will permanently cancel your booking for{" "}
+              <strong>
+                {bookingToCancel?.packageName ||
+                  bookingToCancel?.name ||
+                  "this package"}
+              </strong>
+              . This action can't be undone.
+            </p>
+          </Modal>
 
           <Modal
             title="Booking Details"
@@ -741,15 +806,22 @@ function Traveler() {
             onCancel={() => setIsBookingDetailsOpen(false)}
             footer={
               <div className="flex justify-end gap-2">
-                {viewedBooking && viewedBooking.paymentStatus !== "Paid" && (
-                  <Button
-                    type="primary"
-                    style={{ backgroundColor: "#005707", border: "none" }}
-                    onClick={() => resumePayment(viewedBooking)}
-                  >
-                    Pay Now
+                {viewedBooking && viewedBooking.status === "Pending" && (
+                  <Button danger onClick={() => openCancelModal(viewedBooking)}>
+                    Cancel Booking
                   </Button>
                 )}
+                {viewedBooking &&
+  viewedBooking.paymentStatus !== "Paid" &&
+  viewedBooking.status !== "Cancelled" && (
+    <Button
+      type="primary"
+      style={{ backgroundColor: "#005707", border: "none" }}
+      onClick={() => resumePayment(viewedBooking)}
+    >
+      Pay Now
+    </Button>
+  )}
                 <Button onClick={() => setIsBookingDetailsOpen(false)}>
                   Close
                 </Button>
@@ -1187,10 +1259,7 @@ function Traveler() {
                 border: "none",
               }}
               onClick={async () => {
-                // The booking document already exists (created at step 4).
-                // This just records the transaction against it — the
-                // backend marks the booking's paymentStatus as
-                // 'Paid' automatically when the transaction is made.
+               
                 const success = await handlePayment(total);
                 if (!success) return;
 
