@@ -482,6 +482,7 @@ function Traveler() {
     setTransactionForm(null);
     setSelectedMenu("4");
   };
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const savedCurrentUser = localStorage.getItem("currentUser");
@@ -551,7 +552,7 @@ function Traveler() {
     };
 
     fetchData();
-  }, []);
+  }, [refreshKey]);
 
   const fetchBookings = async () => {
     if (!currentUser?._id) return;
@@ -572,7 +573,7 @@ function Traveler() {
   useEffect(() => {
     fetchBookings();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUser]);
+  }, [currentUser, refreshKey]);
 
   const viewPackages = (pkg) => {
     setSelectedPackage(pkg);
@@ -668,6 +669,7 @@ function Traveler() {
         `${API_BASE_URL}/api/transactions/createTransaction`,
         transactionData,
       );
+      setRefreshKey((prev) => prev + 1);
 
       return true;
     } catch (err) {
@@ -931,6 +933,7 @@ function Traveler() {
                     setBookingForm(values);
                     setCreatedBooking(res.data);
                     setSelectedMenu("6");
+                    setRefreshKey((prev) => prev + 1);
                   } catch (err) {
                     console.error(err);
                     message.error(
