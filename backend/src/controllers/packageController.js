@@ -3,7 +3,7 @@ const Package = require('../models/packages');
 const Destination = require('../models/destination');
 const Booking = require('../models/booking');
 const Transaction = require('../models/transaction');
-
+const axios = require('axios');
 const asyncHandler = require('express-async-handler');
 
 const normalizeDestinationIds = (destination) => {
@@ -95,6 +95,13 @@ const createPackage = asyncHandler(async (req, res) => {
   });
 
   const savedPackage = await newPackage.save();
+  try {
+    axios.post(`${process.env.ADMIN_URL}/api/notify`, {
+      system: "tourism",
+    });
+  } catch (err) {
+    console.error("Failed to send notification:", err.message);
+  }
   res.status(201).json(savedPackage);
 });
 
@@ -210,6 +217,13 @@ const deletePackage = asyncHandler(async (req, res) => {
   }
 
   await packageItem.deleteOne();
+  try {
+      axios.post(`${process.env.ADMIN_URL}/api/notify`, {
+        system: "tourism",
+      });
+    } catch (err) {
+      console.error("Failed to send notification:", err.message);
+    }
 
   res.status(200).json({ message: 'Package deleted successfully.' });
 });

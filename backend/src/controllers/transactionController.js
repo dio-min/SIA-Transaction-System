@@ -3,6 +3,7 @@ const Booking = require('../models/booking');
 const User = require('../models/user');
 const Package = require('../models/packages');
 const Transaction = require('../models/transaction');
+const axios = require('axios');
 
 const createTransaction = asyncHandler(async (req, res) => {
     const { userId, bookingId, paymentMethod, amount } = req.body;
@@ -39,6 +40,13 @@ const createTransaction = asyncHandler(async (req, res) => {
    booking.paymentStatus = 'Paid';
    booking.status = 'Confirmed';
     await booking.save();
+    try {
+        axios.post(`${process.env.ADMIN_URL}/api/notify`, {
+          system: "tourism",
+        });
+      } catch (err) {
+        console.error("Failed to send notification:", err.message);
+      }
 
     res.status(201).json(transaction);
 });

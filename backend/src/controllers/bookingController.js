@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const Booking = require('../models/booking');
 const User = require('../models/user');
 const Package = require('../models/packages');
-
+const axios = require('axios');
 const createBooking = asyncHandler(async (req, res) => {
   const {
     userId,
@@ -43,6 +43,14 @@ const createBooking = asyncHandler(async (req, res) => {
     paymentStatus: 'Unpaid',
     status: 'Pending',
   });
+  try {
+    axios.post(`${process.env.ADMIN_URL}/api/notify`, {
+      system: "tourism",
+    });
+  } catch (err) {
+    console.error("Failed to send notification:", err.message);
+  }
+
 
   res.status(201).json(booking);
 });
@@ -94,6 +102,13 @@ const cancelBooking = asyncHandler(async (req, res) => {
   booking.status = 'Cancelled';
   booking.paymentStatus = 'Cancelled';
   await booking.save();
+  try {
+    axios.post(`${process.env.ADMIN_URL}/api/notify`, {
+      system: "tourism",
+    });
+  } catch (err) {
+    console.error("Failed to send notification:", err.message);
+  }
 
   res.status(200).json({ message: 'Booking cancelled successfully.', booking });
 });
