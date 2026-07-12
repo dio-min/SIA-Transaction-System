@@ -594,7 +594,7 @@ function Traveler() {
 
     setCancelingBookingId(bookingId);
     try {
-      await axios.put(`http://localhost:5000/api/bookings/cancel/${bookingId}`);
+      await axios.put(`${API_BASE_URL}/api/bookings/cancel/${bookingId}`);
       message.success("Booking cancelled.");
       setIsCancelModalOpen(false);
       setBookingToCancel(null);
@@ -666,7 +666,7 @@ function Traveler() {
       };
 
       await axios.post(
-        `http://localhost:5000/api/transactions/createTransaction`,
+        `${API_BASE_URL}/api/transactions/createTransaction`,
         transactionData,
       );
       setRefreshKey((prev) => prev + 1);
@@ -926,7 +926,7 @@ function Traveler() {
                     };
 
                     const res = await axios.post(
-                      `http://localhost:5000/api/bookings/create`,
+                      `${API_BASE_URL}/api/bookings/create`,
                       bookingData,
                     );
 
