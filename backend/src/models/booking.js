@@ -11,7 +11,7 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    
+
     packageId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Package',
@@ -38,7 +38,7 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    
+
     paymentStatus: {
       type: String,
       enum: ['Unpaid', 'Paid', 'Cancelled'],
@@ -49,7 +49,21 @@ const bookingSchema = new mongoose.Schema(
       enum: ['Pending', 'Confirmed', 'Cancelled'],
       default: 'Pending',
     },
-    
+
+    // Set only when a room was actually reserved externally (duration_days > 1).
+    // Stays null for same-day packages that don't need lodging.
+    externalReservationId: {
+      type: String,
+      default: null,
+    },
+    reservationFee: {
+      type: Number,
+      default: 0,
+    },
+    room: {
+      type: String,
+      default: null,
+    },
   },
   {
     timestamps: true,

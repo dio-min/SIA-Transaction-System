@@ -594,7 +594,7 @@ function Traveler() {
 
     setCancelingBookingId(bookingId);
     try {
-      await axios.put(`${API_BASE_URL}/api/bookings/cancel/${bookingId}`);
+      await axios.put(`http://localhost:5000/api/bookings/cancel/${bookingId}`);
       message.success("Booking cancelled.");
       setIsCancelModalOpen(false);
       setBookingToCancel(null);
@@ -666,7 +666,7 @@ function Traveler() {
       };
 
       await axios.post(
-        `${API_BASE_URL}/api/transactions/createTransaction`,
+        `http://localhost:5000/api/transactions/createTransaction`,
         transactionData,
       );
       setRefreshKey((prev) => prev + 1);
@@ -926,7 +926,7 @@ function Traveler() {
                     };
 
                     const res = await axios.post(
-                      `${API_BASE_URL}/api/bookings/create`,
+                      `http://localhost:5000/api/bookings/create`,
                       bookingData,
                     );
 
@@ -1196,6 +1196,20 @@ function Traveler() {
                 <span>Phone</span>
                 <span>{bookingForm?.phone}</span>
               </div>
+              <Divider />
+
+              {createdBooking?.reservationFee != null && (
+                <div className="flex justify-between">
+                  <span>Hotel Reservation Fee</span>
+                  <span>
+                    ₱ {createdBooking.reservationFee.toLocaleString()}
+                  </span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span>Package Price</span>
+                <span>₱ {(selectedPackage?.price || 0) * (bookingForm?.no_of_travelers || 0).toLocaleString()}</span>
+              </div>
 
               <Divider />
 
@@ -1203,7 +1217,11 @@ function Traveler() {
                 <span>Total</span>
                 <span className="text-green-700">
                   ₱
-                  {selectedPackage?.price * (bookingForm?.no_of_travelers || 0)}
+                  {(
+                    
+                    (selectedPackage?.price || 0) * (bookingForm?.no_of_travelers || 0) +
+                    (createdBooking?.reservationFee || 0)
+                  ).toLocaleString()}
                 </span>
               </div>
             </div>
@@ -1230,8 +1248,8 @@ function Traveler() {
         return <Empty description="No booking in progress." />;
       }
 
-      const total =
-        (bookingForm?.no_of_travelers || 0) * (selectedPackage?.price || 0);
+      const total = (selectedPackage?.price || 0) * (bookingForm?.no_of_travelers || 0) + (createdBooking?.reservationFee || 0)
+                
 
       return (
         <div className="max-w-2xl mx-auto">
