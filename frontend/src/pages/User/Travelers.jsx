@@ -868,6 +868,11 @@ function Traveler() {
                   <span>{viewedBooking.phone || "N/A"}</span>
                 </div>
                 <Divider />
+                
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Hotel Ogos Room No#</span>
+                  <span>{viewedBooking.room || "N/A"}</span>
+                </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Booking Status</span>
                   <Tag>{viewedBooking.status || "N/A"}</Tag>

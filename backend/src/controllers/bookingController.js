@@ -75,7 +75,7 @@ const createBooking = asyncHandler(async (req, res) => {
         checkInTime: checkInTime,
         selectedRoom: packageItem.roomType || "premium",
         hours: hours,
-        notes: "-Bisaya NV Reservation-",
+        notes: "-Bisita NV Reservation-",
         totalAmount: calculatedPrice,
         paymentDetails: {
           status: "pending",
