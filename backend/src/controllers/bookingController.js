@@ -192,7 +192,7 @@ const cancelBooking = asyncHandler(async (req, res) => {
     );
   }
   else {
-    room = "not reserved";
+    booking.room = "not reserved";
   }
 } catch (error) {
   console.error("Failed to update external reservation:", error.response?.data || error.message);
