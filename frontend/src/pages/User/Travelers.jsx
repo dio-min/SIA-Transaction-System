@@ -505,9 +505,7 @@ function Traveler() {
     localStorage.setItem("travellerSelectedMenu", selectedMenu);
   }, [selectedMenu]);
 
-  // If we land on a booking-flow step without the data it needs (e.g. after
-  // a refresh, or navigating the drawer mid-flow), bounce back to Home
-  // instead of letting the render crash.
+  
   useEffect(() => {
     if ((selectedMenu === "4" || selectedMenu === "5") && !selectedPackage) {
       setSelectedMenu("0");
@@ -1209,7 +1207,7 @@ function Traveler() {
             </div>
 
             <div className="flex justify-end gap-3 mt-8">
-              <Button onClick={() => setSelectedMenu("4")}>Back</Button>
+             
 
               <Button
                 type="primary"
@@ -1328,9 +1326,7 @@ function Traveler() {
           onSignOut={() => setCurrentUser(null)}
         />
       </Header>
-
       <Content className="py-8 px-6">{renderContent()}</Content>
-
       <Footer
         style={{
           textAlign: "center",
