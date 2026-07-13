@@ -1230,6 +1230,7 @@ function Traveler() {
             </div>
 
             <div className="flex justify-end gap-3 mt-8">
+              <Button onClick={() => setSelectedMenu("3") || setBookingForm(null)}>Cancel</Button>
              
 
               <Button
