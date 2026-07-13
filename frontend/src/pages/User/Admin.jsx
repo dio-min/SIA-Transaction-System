@@ -1135,7 +1135,7 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
                   { required: true, message: "Please enter the duration." },
                 ]}
               >
-                <InputNumber min={0} style={{ width: "100%" }} />
+                <InputNumber min={0} max={7} style={{ width: "100%" }} />
               </Form.Item>
 
               <Form.Item
@@ -1170,7 +1170,7 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
                   { required: true, message: "Please enter max capacity." },
                 ]}
               >
-                <InputNumber min={1} style={{ width: "100%" }} />
+                <InputNumber min={1} max={20} style={{ width: "100%" }} />
               </Form.Item>
 
               <Form.Item
@@ -1180,7 +1180,7 @@ function AddPackage({ editPackage, onUpdateComplete, onClose }) {
                   { required: true, message: "Please enter the advance days." },
                 ]}
               >
-                <InputNumber min={0} style={{ width: "100%" }} />
+                <InputNumber min={0} max={7} style={{ width: "100%" }} />
               </Form.Item>
               <Form.Item
                 label="Package Image"

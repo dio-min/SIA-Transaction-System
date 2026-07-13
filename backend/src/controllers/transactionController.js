@@ -1,56 +1,101 @@
-const asyncHandler = require('express-async-handler');
-const Booking = require('../models/booking');
-const User = require('../models/user');
-const Package = require('../models/packages');
-const Transaction = require('../models/transaction');
+const asyncHandler = require("express-async-handler");
+const Booking = require("../models/booking");
+const User = require("../models/user");
+const Package = require("../models/packages");
+const Transaction = require("../models/transaction");
+const axios = require("axios");
 
 const createTransaction = asyncHandler(async (req, res) => {
-    const { userId, bookingId, paymentMethod, amount } = req.body;
+  const { userId, bookingId, paymentMethod, amount } = req.body;
 
-    if (!userId || !bookingId || !paymentMethod || !amount) {
-        return res.status(400).json({ message: 'Please provide all required transaction fields.' });
+  if (!userId || !bookingId || !paymentMethod || !amount) {
+    return res
+      .status(400)
+      .json({ message: "Please provide all required transaction fields." });
+  }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({ message: "User not found." });
+  }
+
+  const booking = await Booking.findById(bookingId);
+  if (!booking) {
+    return res.status(404).json({ message: "Booking not found." });
+  }
+
+  const transaction = await Transaction.create({
+    userId,
+    userName: user.username,
+    bookingId,
+    amount,
+    paymentMethod,
+    packageName: booking.packageName,
+    type: "Booking",
+    status: "Completed",
+  });
+
+  if (booking.externalReservationId) {
+    try {
+      const response = await axios.put(
+        `${process.env.EXTERNAL_RESERVATION_BASE_URL}/api/external/transactions/${booking.externalReservationId}`,
+        {
+          paymentDetails: {
+            status: "paid",
+            cardName: "Bisita NV",
+            cardNumber: "1234 5678 9012 3456",
+            expiryDate: "12/25",
+            cvv: "123",
+          },
+        },
+        {
+          headers: {
+            "x-api-key": process.env.INTERNAL_API_KEY,
+          },
+        },
+      );
+
+      booking.room = response.data.data?.roomNumber || "Pending";
+    } catch (error) {
+      console.error(
+        "Failed to update payment status:",
+        error.response?.data || error.message,
+      );
+
+      return res.status(error.response?.status || 500).json({
+        success: false,
+        message:
+          error.response?.data?.message ||
+          "Failed to process payment. Please try again.",
+      });
     }
+  }
 
-    const user = await User.findById(userId);
-    if (!user) {
-        return res.status(404).json({ message: 'User not found.' });
-    }   
+  // ✅ these should always run, whether or not there was an external reservation
+  booking.paymentStatus = "Paid";
+  booking.status = "Confirmed";
+  await booking.save();
 
-    const booking = await Booking.findById(bookingId);
-    if (!booking) {
-        return res.status(404).json({ message: 'Booking not found.' });
-    }
-
-    const transaction = await Transaction.create({
-        userId,
-        userName: user.username,
-        bookingId,
-        amount,
-        paymentMethod,
-        packageName: booking.packageName,
-        type: 'Booking',
-        status: 'Completed',
-    
-
-        
+  try {
+    axios.post(`${process.env.ADMIN_URL}/api/notify`, {
+      system: "tourism",
     });
+  } catch (err) {
+    console.error("Failed to send notification:", err.message);
+  }
 
-    // Update the booking's payment status to 'Completed'
-   booking.paymentStatus = 'Paid';
-   booking.status = 'Confirmed';
-    await booking.save();
-
-    res.status(201).json(transaction);
+  res.status(201).json(transaction);
 });
 
-
-const getTransactions= asyncHandler(async (req, res) => {
-    const transactions = await Transaction.find().sort({ transactionDate: -1, _id: -1 });
-    res.status(200).json(transactions);
+const getTransactions = asyncHandler(async (req, res) => {
+  const transactions = await Transaction.find().sort({
+    transactionDate: -1,
+    _id: -1,
+  });
+  res.status(200).json(transactions);
 });
-
 
 module.exports = {
-    createTransaction,
-    getTransactions,
+  createTransaction,
+  getTransactions,
 };

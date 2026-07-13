@@ -1,5 +1,6 @@
 const Destination = require("../models/destination");
 const asyncHandler = require("express-async-handler");
+const axios = require("axios");
 
 const createDestination = asyncHandler(async (req, res) => {
   const { destination, location, description } = req.body;
@@ -19,6 +20,13 @@ const createDestination = asyncHandler(async (req, res) => {
   });
 
   const savedDestination = await newDestination.save();
+  try {
+      axios.post(`${process.env.ADMIN_URL}/api/notify`, {
+        system: "tourism",
+      });
+    } catch (err) {
+      console.error("Failed to send notification:", err.message);
+    }
   res.status(201).json(savedDestination);
 });
 
@@ -48,6 +56,13 @@ const deleteDestination = asyncHandler(async (req, res) => {
   }
 
   await destination.deleteOne();
+  try {
+      axios.post(`${process.env.ADMIN_URL}/api/notify`, {
+        system: "tourism",
+      });
+    } catch (err) {
+      console.error("Failed to send notification:", err.message);
+    }
 
   res.status(200).json({
     message: "Destination deleted successfully.",
