@@ -19,8 +19,9 @@ import {
   DatePicker,
   InputNumber,
   List,
-  Radio,
+  Checkbox,
   Select,
+
 } from "antd";
 import {
   MenuOutlined,
@@ -475,6 +476,9 @@ function Traveler() {
   const showModal = () => setIsModalOpen(true);
   const handleOk = () => setIsModalOpen(false);
   const handleCancel = () => setIsModalOpen(false);
+ 
+
+  const [bookingDetails, setBookingDetails] = useState(null);
   const handleBookNow = (pkg) => {
     setSelectedPackage(pkg);
     setBookingForm(null);
@@ -661,6 +665,7 @@ function Traveler() {
         bookingId: createdBooking._id || createdBooking.id,
         paymentMethod: transactionForm.paymentMethod,
         amount,
+        isHotelRoomReserved: bookingDetails?.isHotelRoomReserved || false,
       };
 
       await axios.post(
@@ -894,136 +899,139 @@ function Traveler() {
       );
     } else if (selectedMenu === "4") {
       return (
-        <>
-          {selectedPackage ? (
-            <div className="container mx-auto max-w-3xl py-6">
-              <h1 className="text-lg font-semibold mb-4">Booking Form</h1>
+       <>
+  {selectedPackage ? (
+    <div className="container mx-auto max-w-3xl py-6">
+      <h1 className="text-lg font-semibold mb-4">Booking Form</h1>
 
-              <p className=" font-semibold mb-4">
-                Selected Package:{" "}
-                {selectedPackage.name || selectedPackage.packageName}
-              </p>
+      <p className="font-semibold mb-4">
+        Selected Package:{" "}
+        {selectedPackage.name || selectedPackage.packageName}
+      </p>
 
-              <Form
-                form={form}
-                name="validateOnly"
-                layout="vertical"
-                autoComplete="off"
-                onFinish={async (values) => {
-                  if (!currentUser?._id) {
-                    message.error("You must be signed in to book.");
-                    return;
-                  }
+      <Form
+        form={form}
+        name="validateOnly"
+        layout="vertical"
+        autoComplete="off"
+        initialValues={{
+          fullname: currentUser?.username || "",
+          reserve_hotel: false, // Default value managed by Form
+        }}
+        onFinish={async (values) => {
+          if (!currentUser?._id) {
+            message.error("You must be signed in to book.");
+            return;
+          }
 
-                  setCreatingBooking(true);
-                  try {
-                    const bookingData = {
-                      userId: currentUser._id,
-                      packageId: selectedPackage._id,
-                      packageName:
-                        selectedPackage.packageName || selectedPackage.name,
-                      travelDate: values.tourdate?.format("YYYY-MM-DD"),
-                      travelersCount: values.no_of_travelers,
-                      fullName: values.fullname,
-                      phone: values.phone,
-                    };
+          setCreatingBooking(true);
+          try {
+            const bookingData = {
+              userId: currentUser._id,
+              packageId: selectedPackage._id,
+              packageName: selectedPackage.packageName || selectedPackage.name,
+              travelDate: values.tourdate?.format("YYYY-MM-DD"),
+              travelersCount: values.no_of_travelers,
+              fullName: values.fullname,
+              phone: values.phone,
+              // FIX: Grab the boolean value directly from the Form values object
+              isHotelRoomReserved: values.reserve_hotel, 
+            };
 
-                    const res = await axios.post(
-                      `${API_BASE_URL}/api/bookings/create`,
-                      bookingData,
-                    );
+            const res = await axios.post(
+              `${API_BASE_URL}/api/bookings/create`,
+              bookingData,
+            );
+            setBookingDetails(bookingData);
 
-                    setBookingForm(values);
-                    setCreatedBooking(res.data);
-                    setSelectedMenu("6");
-                    setRefreshKey((prev) => prev + 1);
-                  } catch (err) {
-                    console.error(err);
-                    message.error(
-                      "Could not create booking. Please try again.",
-                    );
-                  } finally {
-                    setCreatingBooking(false);
-                  }
-                }}
-                initialValues={{
-                  fullname: currentUser?.username || "",
-                }}
-              >
-                <Form.Item
-                  name="tourdate"
-                  label="Tour Date"
-                  rules={[
-                    { required: true, message: "Please select a tour date" },
-                  ]}
-                >
-                  <DatePicker style={{ width: "100%" }} />
-                </Form.Item>
-                <Form.Item
-                  name="no_of_travelers"
-                  label="Number of Travelers"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please enter travelers count",
-                    },
-                  ]}
-                >
-                  <InputNumber
-                    min={1}
-                    max={selectedPackage?.max_capacity}
-                    style={{ width: "100%" }}
-                  />
-                </Form.Item>
-                <Form.Item
-                  name="fullname"
-                  label="Full Name"
-                  rules={[
-                    { required: true, message: "Please enter your full name" },
-                  ]}
-                >
-                  <Input style={{ width: "100%" }} />
-                </Form.Item>
-                <Form.Item
-                  name="phone"
-                  label="Phone Number"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please enter your phone number",
-                    },
-                  ]}
-                >
-                  <Input style={{ width: "100%" }} />
-                </Form.Item>
-                <Form.Item>
-                  <div className="flex  items-center gap-5 align-center justify-end">
-                    <Button
-                      onClick={() => setSelectedMenu("0")}
-                      disabled={creatingBooking}
-                    >
-                      Cancel
-                    </Button>
+            setBookingForm(values);
+            setCreatedBooking(res.data);
+            setSelectedMenu("6");
+            setRefreshKey((prev) => prev + 1);
+          } catch (err) {
+            console.error(err);
+            message.error("Could not create booking. Please try again.");
+          } finally {
+            setCreatingBooking(false);
+          }
+        }}
+      >
+        <Form.Item
+          name="tourdate"
+          label="Tour Date"
+          rules={[{ required: true, message: "Please select a tour date" }]}
+        >
+          <DatePicker style={{ width: "100%" }} />
+        </Form.Item>
 
-                    <Button
-                      type="primary"
-                      htmlType="submit"
-                      loading={creatingBooking}
-                      style={{
-                        backgroundColor: "#005707",
-                        border: "none",
-                      }}
-                    >
-                      Continue to book
-                    </Button>
-                  </div>
-                </Form.Item>
-              </Form>
-            </div>
-          ) : (
-            <Empty description="Select a package to start a booking" />
-          )}
-        </>
+        <Form.Item
+          name="no_of_travelers"
+          label="Number of Travelers"
+          rules={[
+            { required: true, message: "Please enter travelers count" },
+          ]}
+        >
+          <InputNumber
+            min={1}
+            max={selectedPackage?.max_capacity}
+            style={{ width: "100%" }}
+          />
+        </Form.Item>
+
+        <Form.Item
+          name="fullname"
+          label="Full Name"
+          rules={[{ required: true, message: "Please enter your full name" }]}
+        >
+          <Input style={{ width: "100%" }} />
+        </Form.Item>
+
+        <Form.Item
+          name="phone"
+          label="Phone Number"
+          rules={[{ required: true, message: "Please enter your phone number" }]}
+        >
+          <Input style={{ width: "100%" }} />
+        </Form.Item>
+
+        {/* FIX: Handled natively by Ant Design Form (Removed custom checked/onChange) */}
+        <Form.Item
+          name="reserve_hotel"
+          valuePropName="checked"
+        >
+          <Checkbox>
+            Reserve a hotel room
+          </Checkbox>
+        </Form.Item>
+
+        <Form.Item>
+          <div className="flex items-center gap-5 align-center justify-end">
+            <Button
+              onClick={() => setSelectedMenu("0")}
+              disabled={creatingBooking}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={creatingBooking}
+              style={{
+                backgroundColor: "#005707",
+                border: "none",
+              }}
+            >
+              Continue to book
+            </Button>
+          </div>
+        </Form.Item>
+      </Form>
+    </div>
+  ) : (
+    <Empty description="Select a package to start a booking" />
+  )}
+</>
       );
     } else if (selectedMenu === "5") {
       const packageImage =

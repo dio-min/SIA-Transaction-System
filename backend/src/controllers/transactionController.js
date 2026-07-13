@@ -6,7 +6,8 @@ const Transaction = require("../models/transaction");
 const axios = require("axios");
 
 const createTransaction = asyncHandler(async (req, res) => {
-  const { userId, bookingId, paymentMethod, amount } = req.body;
+  const { userId, bookingId, paymentMethod, amount, isHotelRoomReserved } =
+    req.body;
 
   if (!userId || !bookingId || !paymentMethod || !amount) {
     return res
@@ -35,43 +36,49 @@ const createTransaction = asyncHandler(async (req, res) => {
     status: "Completed",
   });
 
-  if (booking.externalReservationId) {
-    try {
-      const response = await axios.put(
-        `${process.env.EXTERNAL_RESERVATION_BASE_URL}/api/external/transactions/${booking.externalReservationId}`,
-        {
-          paymentDetails: {
-            status: "paid",
-            cardName: "Bisita NV",
-            cardNumber: "1234 5678 9012 3456",
-            expiryDate: "12/25",
-            cvv: "123",
+  if (isHotelRoomReserved === true || isHotelRoomReserved === "yes") {
+    if (booking.externalReservationId) {
+      try {
+        const response = await axios.put(
+          `${process.env.EXTERNAL_RESERVATION_BASE_URL}/api/external/transactions/${booking.externalReservationId}`,
+          {
+            paymentDetails: {
+              status: "paid",
+              cardName: "Bisita NV",
+              cardNumber: "1234 5678 9012 3456",
+              expiryDate: "12/25",
+              cvv: "123",
+            },
           },
-        },
-        {
-          headers: {
-            "x-api-key": process.env.INTERNAL_API_KEY,
+          {
+            headers: {
+              "x-api-key": process.env.INTERNAL_API_KEY,
+            },
           },
-        },
-      );
+        );
 
-      booking.room = response.data.data?.roomNumber || "Pending";
-    } catch (error) {
-      console.error(
-        "Failed to update payment status:",
-        error.response?.data || error.message,
-      );
+        booking.room = response.data.data?.roomNumber || "Pending";
+      } catch (error) {
+        console.error(
+          "Failed to update payment status:",
+          error.response?.data || error.message,
+        );
 
-      return res.status(error.response?.status || 500).json({
-        success: false,
-        message:
-          error.response?.data?.message ||
-          "Failed to process payment. Please try again.",
-      });
+        return res.status(error.response?.status || 500).json({
+          success: false,
+          message:
+            error.response?.data?.message ||
+            "Failed to process payment. Please try again.",
+        });
+      }
     }
   }
+  else {
 
-  // ✅ these should always run, whether or not there was an external reservation
+
+  
+  booking.room = "not reserved";
+  }
   booking.paymentStatus = "Paid";
   booking.status = "Confirmed";
   await booking.save();
