@@ -447,7 +447,7 @@ function JeepneyRoutes() {
       setError(null);
       try {
         const res = await axios.get(
-          `${API_BASE_URL}/api/external/routes`
+          `${API_BASE_URL}/api/transport/routes`
         );
         const list = Array.isArray(res.data)
           ? res.data
