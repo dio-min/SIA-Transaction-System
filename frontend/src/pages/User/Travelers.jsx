@@ -21,7 +21,6 @@ import {
   List,
   Checkbox,
   Select,
-
 } from "antd";
 import {
   MenuOutlined,
@@ -437,6 +436,99 @@ function WelcomeSection({ currentUser }) {
   );
 }
 
+function JeepneyRoutes() {
+  const [routes, setRoutes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchRoutes = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await axios.get(
+          `${API_BASE_URL}/api/external/routes`
+        );
+        const list = Array.isArray(res.data)
+          ? res.data
+          : Array.isArray(res.data?.routes)
+            ? res.data.routes
+            : Array.isArray(res.data?.data)
+              ? res.data.data
+              : [];
+
+        setRoutes(
+          list.map((d) => ({
+            ...d,
+            key: d._id || d.id,
+          })),
+        );
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load jeepney routes. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRoutes();
+  }, []);
+
+  return (
+    <div className="container mx-auto">
+      <h2 className="text-2xl font-semibold my-6">Jeepney Routes</h2>
+
+      {loading ? (
+        <div className="flex justify-center py-10">
+          <Spin size="large" />
+        </div>
+      ) : routes.length === 0 ? (
+        <Empty description="No routes found" />
+      ) : (
+       
+    <Row gutter={[16, 16]}>
+
+          {routes.map((route) => (
+            <Col key={route.key} xs={10} sm={12} md={8} lg={6} span={5}>
+              <Card
+                hoverable
+                style={{
+                  height: 150,
+                  borderRadius: 10,
+                  border: "1px solid #e0e0e0",
+                  overflow: "hidden",
+                }}
+              >
+                <Meta
+                  title={
+                    
+                    route.origin + " - " + route.destination || "Unnamed Route"
+                  }
+                  description={
+                    <div
+                      style={{
+                        display: "-webkit-box",
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      <p>Estimated Travel Time: {route.estimatedTravelTime || "N/A"} mins</p>
+                      <p>Fare: {route.estimatedFare ? `₱${route.estimatedFare}` : "N/A"}</p>
+                    </div>
+
+                }              />
+              </Card>
+            </Col>
+          ))}
+        </Row>
+        
+      )}
+    </div>
+  );
+}
+
 function Traveler() {
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedMenu, setSelectedMenu] = useState(() => {
@@ -476,7 +568,6 @@ function Traveler() {
   const showModal = () => setIsModalOpen(true);
   const handleOk = () => setIsModalOpen(false);
   const handleCancel = () => setIsModalOpen(false);
- 
 
   const [bookingDetails, setBookingDetails] = useState(null);
   const handleBookNow = (pkg) => {
@@ -509,7 +600,6 @@ function Traveler() {
     localStorage.setItem("travellerSelectedMenu", selectedMenu);
   }, [selectedMenu]);
 
-  
   useEffect(() => {
     if ((selectedMenu === "4" || selectedMenu === "5") && !selectedPackage) {
       setSelectedMenu("0");
@@ -871,7 +961,7 @@ function Traveler() {
                   <span>{viewedBooking.phone || "N/A"}</span>
                 </div>
                 <Divider />
-                
+
                 <div className="flex justify-between">
                   <span className="text-gray-500">Hotel Ogos Room No#</span>
                   <span>{viewedBooking.room || "N/A"}</span>
@@ -899,139 +989,146 @@ function Traveler() {
       );
     } else if (selectedMenu === "4") {
       return (
-       <>
-  {selectedPackage ? (
-    <div className="container mx-auto max-w-3xl py-6">
-      <h1 className="text-lg font-semibold mb-4">Booking Form</h1>
+        <>
+          {selectedPackage ? (
+            <div className="container mx-auto max-w-3xl py-6">
+              <h1 className="text-lg font-semibold mb-4">Booking Form</h1>
 
-      <p className="font-semibold mb-4">
-        Selected Package:{" "}
-        {selectedPackage.name || selectedPackage.packageName}
-      </p>
+              <p className="font-semibold mb-4">
+                Selected Package:{" "}
+                {selectedPackage.name || selectedPackage.packageName}
+              </p>
 
-      <Form
-        form={form}
-        name="validateOnly"
-        layout="vertical"
-        autoComplete="off"
-        initialValues={{
-          fullname: currentUser?.username || "",
-          reserve_hotel: false, // Default value managed by Form
-        }}
-        onFinish={async (values) => {
-          if (!currentUser?._id) {
-            message.error("You must be signed in to book.");
-            return;
-          }
+              <Form
+                form={form}
+                name="validateOnly"
+                layout="vertical"
+                autoComplete="off"
+                initialValues={{
+                  fullname: currentUser?.username || "",
+                  reserve_hotel: false, // Default value managed by Form
+                }}
+                onFinish={async (values) => {
+                  if (!currentUser?._id) {
+                    message.error("You must be signed in to book.");
+                    return;
+                  }
 
-          setCreatingBooking(true);
-          try {
-            const bookingData = {
-              userId: currentUser._id,
-              packageId: selectedPackage._id,
-              packageName: selectedPackage.packageName || selectedPackage.name,
-              travelDate: values.tourdate?.format("YYYY-MM-DD"),
-              travelersCount: values.no_of_travelers,
-              fullName: values.fullname,
-              phone: values.phone,
-              // FIX: Grab the boolean value directly from the Form values object
-              isHotelRoomReserved: values.reserve_hotel, 
-            };
+                  setCreatingBooking(true);
+                  try {
+                    const bookingData = {
+                      userId: currentUser._id,
+                      packageId: selectedPackage._id,
+                      packageName:
+                        selectedPackage.packageName || selectedPackage.name,
+                      travelDate: values.tourdate?.format("YYYY-MM-DD"),
+                      travelersCount: values.no_of_travelers,
+                      fullName: values.fullname,
+                      phone: values.phone,
+                      // FIX: Grab the boolean value directly from the Form values object
+                      isHotelRoomReserved: values.reserve_hotel,
+                    };
 
-            const res = await axios.post(
-              `${API_BASE_URL}/api/bookings/create`,
-              bookingData,
-            );
-            setBookingDetails(bookingData);
+                    const res = await axios.post(
+                      `${API_BASE_URL}/api/bookings/create`,
+                      bookingData,
+                    );
+                    setBookingDetails(bookingData);
 
-            setBookingForm(values);
-            setCreatedBooking(res.data);
-            setSelectedMenu("6");
-            setRefreshKey((prev) => prev + 1);
-          } catch (err) {
-            console.error(err);
-            message.error("Could not create booking. Please try again.");
-          } finally {
-            setCreatingBooking(false);
-          }
-        }}
-      >
-        <Form.Item
-          name="tourdate"
-          label="Tour Date"
-          rules={[{ required: true, message: "Please select a tour date" }]}
-        >
-          <DatePicker style={{ width: "100%" }} />
-        </Form.Item>
+                    setBookingForm(values);
+                    setCreatedBooking(res.data);
+                    setSelectedMenu("6");
+                    setRefreshKey((prev) => prev + 1);
+                  } catch (err) {
+                    console.error(err);
+                    message.error(
+                      "Could not create booking. Please try again.",
+                    );
+                  } finally {
+                    setCreatingBooking(false);
+                  }
+                }}
+              >
+                <Form.Item
+                  name="tourdate"
+                  label="Tour Date"
+                  rules={[
+                    { required: true, message: "Please select a tour date" },
+                  ]}
+                >
+                  <DatePicker style={{ width: "100%" }} />
+                </Form.Item>
 
-        <Form.Item
-          name="no_of_travelers"
-          label="Number of Travelers"
-          rules={[
-            { required: true, message: "Please enter travelers count" },
-          ]}
-        >
-          <InputNumber
-            min={1}
-            max={selectedPackage?.max_capacity}
-            style={{ width: "100%" }}
-          />
-        </Form.Item>
+                <Form.Item
+                  name="no_of_travelers"
+                  label="Number of Travelers"
+                  rules={[
+                    { required: true, message: "Please enter travelers count" },
+                  ]}
+                >
+                  <InputNumber
+                    min={1}
+                    max={selectedPackage?.max_capacity}
+                    style={{ width: "100%" }}
+                  />
+                </Form.Item>
 
-        <Form.Item
-          name="fullname"
-          label="Full Name"
-          rules={[{ required: true, message: "Please enter your full name" }]}
-        >
-          <Input style={{ width: "100%" }} />
-        </Form.Item>
+                <Form.Item
+                  name="fullname"
+                  label="Full Name"
+                  rules={[
+                    { required: true, message: "Please enter your full name" },
+                  ]}
+                >
+                  <Input style={{ width: "100%" }} />
+                </Form.Item>
 
-        <Form.Item
-          name="phone"
-          label="Phone Number"
-          rules={[{ required: true, message: "Please enter your phone number" }]}
-        >
-          <Input style={{ width: "100%" }} />
-        </Form.Item>
+                <Form.Item
+                  name="phone"
+                  label="Phone Number"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please enter your phone number",
+                    },
+                  ]}
+                >
+                  <Input style={{ width: "100%" }} />
+                </Form.Item>
 
-        {/* FIX: Handled natively by Ant Design Form (Removed custom checked/onChange) */}
-        <Form.Item
-          name="reserve_hotel"
-          valuePropName="checked"
-        >
-          <Checkbox>
-            Reserve a hotel room
-          </Checkbox>
-        </Form.Item>
+                {/* FIX: Handled natively by Ant Design Form (Removed custom checked/onChange) */}
+                <Form.Item name="reserve_hotel" valuePropName="checked">
+                  <Checkbox>Reserve a hotel room</Checkbox>
+                </Form.Item>
 
-        <Form.Item>
-          <div className="flex items-center gap-5 align-center justify-end">
-            <Button
-              onClick={() => setSelectedMenu("0")}
-              disabled={creatingBooking}
-            >
-              Cancel
-            </Button>
+                <Form.Item>
+                  <div className="flex items-center gap-5 align-center justify-end">
+                    <Button
+                      onClick={() => setSelectedMenu("0")}
+                      disabled={creatingBooking}
+                    >
+                      Cancel
+                    </Button>
 
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={creatingBooking}
-              style={{
-                backgroundColor: "#005707",
-                border: "none",
-              }}
-            >
-              Continue to book
-            </Button>
-          </div>
-        </Form.Item>
-      </Form>
-    </div>
-  ) : (
-    <Empty description="Select a package to start a booking" />
-  )}
-</>
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      loading={creatingBooking}
+                      style={{
+                        backgroundColor: "#005707",
+                        border: "none",
+                      }}
+                    >
+                      Continue to book
+                    </Button>
+                  </div>
+                </Form.Item>
+              </Form>
+            </div>
+          ) : (
+            <Empty description="Select a package to start a booking" />
+          )}
+        </>
       );
     } else if (selectedMenu === "5") {
       const packageImage =
@@ -1219,7 +1316,11 @@ function Traveler() {
               )}
               <div className="flex justify-between">
                 <span>Package Price</span>
-                <span>₱ {(selectedPackage?.price || 0) * (bookingForm?.no_of_travelers || 0).toLocaleString()}</span>
+                <span>
+                  ₱{" "}
+                  {(selectedPackage?.price || 0) *
+                    (bookingForm?.no_of_travelers || 0).toLocaleString()}
+                </span>
               </div>
 
               <Divider />
@@ -1229,8 +1330,8 @@ function Traveler() {
                 <span className="text-green-700">
                   ₱
                   {(
-                    
-                    (selectedPackage?.price || 0) * (bookingForm?.no_of_travelers || 0) +
+                    (selectedPackage?.price || 0) *
+                      (bookingForm?.no_of_travelers || 0) +
                     (createdBooking?.reservationFee || 0)
                   ).toLocaleString()}
                 </span>
@@ -1238,8 +1339,11 @@ function Traveler() {
             </div>
 
             <div className="flex justify-end gap-3 mt-8">
-              <Button onClick={() => setSelectedMenu("3") || setBookingForm(null)}>Cancel</Button>
-             
+              <Button
+                onClick={() => setSelectedMenu("3") || setBookingForm(null)}
+              >
+                Cancel
+              </Button>
 
               <Button
                 type="primary"
@@ -1260,8 +1364,9 @@ function Traveler() {
         return <Empty description="No booking in progress." />;
       }
 
-      const total = (selectedPackage?.price || 0) * (bookingForm?.no_of_travelers || 0) + (createdBooking?.reservationFee || 0)
-                
+      const total =
+        (selectedPackage?.price || 0) * (bookingForm?.no_of_travelers || 0) +
+        (createdBooking?.reservationFee || 0);
 
       return (
         <div className="max-w-2xl mx-auto">
@@ -1341,6 +1446,7 @@ function Traveler() {
           onBookNow={handleBookNow}
           viewPackages={viewPackages}
         />
+        <JeepneyRoutes />
       </>
     );
   };

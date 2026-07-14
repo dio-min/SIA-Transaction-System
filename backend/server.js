@@ -11,6 +11,7 @@ const bookingRoutes = require('./src/routers/bookingRoutes');
 const transactionRoutes = require('./src/routers/transactionRoutes');
 const externalRoutes = require('./src/routers/externalRoutes');
 const adminRoutes = require('./src/routers/adminRoutes');
+const transportRoutes = require('./src/routers/transportRoutes');
 
 
 
@@ -33,6 +34,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/external', externalRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/transport', transportRoutes);
 
 
 
